@@ -2,6 +2,7 @@
 
 /* Import Google Font */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Color+Emoji&display=swap');
 
 body {
     font-family: 'Inter', sans-serif;
@@ -21,4 +22,23 @@ body {
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
+}
+.nav-link.active-link, .nav-link-mobile.active-link {
+    color: #2563EB; /* This is Tailwind's blue-600 */
+}
+
+/* For dark mode active links, we'll rely on the class added by JS */
+.dark .nav-link.active-link, .dark .nav-link-mobile.active-link {
+    color: #60A5FA; /* This is Tailwind's blue-400 */
+}
+.glass-card {
+    @apply bg-white/50 dark:bg-slate-800/50 backdrop-blur-lg rounded-xl shadow-lg border border-white/30 dark:border-slate-700 p-6;
+}
+
+/* Style for the active navigation links */
+.nav-link.active-link, .nav-link-mobile.active-link {
+    @apply text-blue-600 dark:text-blue-400;
+}
+.font-emoji {
+    font-family: "Noto Color Emoji", sans-serif;
 }

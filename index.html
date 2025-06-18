@@ -1,6 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
+<html lang="en" class="light"> <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LifePad+ | Smart Daily Planner</title>
@@ -14,78 +13,77 @@
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     
     <link rel="stylesheet" href="style.css">
+    
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
 </head>
-<body class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-sans">
+<body class="bg-gray-200 dark:bg-slate-900 font-sans text-slate-800 dark:text-slate-200">
+    <div class="fixed inset-0 -z-10 h-full w-full bg-white bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:14px_24px] dark:bg-slate-900"><div class="fixed inset-0 -z-10 h-full w-full bg-[radial-gradient(circle_500px_at_50%_200px,#C9EBFF,transparent)] dark:bg-[radial-gradient(circle_500px_at_50%_200px,#334155,transparent)]"></div></div>
 
-    <div id="app" class="min-h-screen flex flex-col">
+    <div id="app" class="min-h-screen flex flex-col pb-20 md:pb-0">
 
-        <header class="bg-white dark:bg-gray-800 shadow-md sticky top-0 z-50">
-            <div class="container mx-auto px-4 py-3 flex justify-between items-center">
-                <h1 class="text-2xl font-bold text-blue-600 dark:text-blue-400">LifePad+</h1>
-                
-                <nav id="main-nav" class="hidden md:flex items-center space-x-6 text-gray-600 dark:text-gray-300">
-                    <a href="#" data-target="planner" class="nav-link active-link">Planner</a>
-                    <a href="#" data-target="mood" class="nav-link">Mood</a>
-                    <a href="#" data-target="focus" class="nav-link">Focus</a>
-                    <a href="#" data-target="challenge" class="nav-link">Challenge</a>
-                    <a href="#" data-target="notes" class="nav-link">Notes</a>
-                </nav>
+        <header class="sticky top-0 z-40">
+            <div class="container mx-auto px-4 py-3">
+                <div class="flex justify-between items-center bg-white/50 dark:bg-slate-800/50 backdrop-blur-lg rounded-xl shadow-lg border border-white/30 dark:border-slate-700 px-4 py-3">
+                    <h1 class="text-2xl font-bold text-blue-600 dark:text-blue-400">LifePad+</h1>
+                    
+                    <nav id="main-nav" class="hidden md:flex items-center space-x-6 text-slate-700 dark:text-slate-300 font-medium">
+                        <a href="#" data-target="planner" class="nav-link">Planner</a>
+                        <a href="#" data-target="mood" class="nav-link">Mood</a>
+                        <a href="#" data-target="focus" class="nav-link">Focus</a>
+                        <a href="#" data-target="challenge" class="nav-link">Challenge</a>
+                        <a href="#" data-target="notes" class="nav-link">Notes</a>
+                    </nav>
 
-                <button id="theme-toggle-btn" class="mr-4 p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700">
-                    <svg id="theme-toggle-sun-icon" class="w-6 h-6 hidden" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.121-3.536a1 1 0 011.414 0l.707.707a1 1 0 01-1.414 1.414l-.707-.707a1 1 0 010-1.414zM10 18a1 1 0 01-1-1v-1a1 1 0 112 0v1a1 1 0 01-1 1zm-4.95-2.464a1 1 0 010 1.414l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 0zm-2.121-3.536a1 1 0 00-1.414 0l-.707.707a1 1 0 001.414 1.414l.707-.707a1 1 0 000-1.414zM10 4a1 1 0 00-1-1V2a1 1 0 10-2 0v1a1 1 0 002 0 1 1 0 00-1 1z" fill-rule="evenodd" clip-rule="evenodd"></path></svg>
-                    <svg id="theme-toggle-moon-icon" class="w-6 h-6 hidden" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
-                </button>
-
-                <div id="auth-container" class="flex items-center space-x-4"></div>
+                    <div class="flex items-center space-x-2 sm:space-x-4">
+                        <button id="theme-toggle-btn" class="p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10">
+                            <svg id="theme-toggle-sun-icon" class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.121-3.536a1 1 0 011.414 0l.707.707a1 1 0 01-1.414 1.414l-.707-.707a1 1 0 010-1.414zM10 18a1 1 0 01-1-1v-1a1 1 0 112 0v1a1 1 0 01-1 1zm-4.95-2.464a1 1 0 010 1.414l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 0zm-2.121-3.536a1 1 0 00-1.414 0l-.707.707a1 1 0 001.414 1.414l.707-.707a1 1 0 000-1.414zM10 4a1 1 0 00-1-1V2a1 1 0 10-2 0v1a1 1 0 002 0 1 1 0 00-1 1z" fill-rule="evenodd" clip-rule="evenodd"></path></svg>
+                            <svg id="theme-toggle-moon-icon" class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+                        </button>
+                        <div id="auth-container" class="flex items-center"></div>
+                    </div>
+                </div>
             </div>
         </header>
 
-        <main class="flex-grow container mx-auto p-4">
-            <section id="planner" class="app-section">
+        <main class="flex-grow container mx-auto px-4">
+            
+            <section id="planner" class="app-section bg-white/50 dark:bg-slate-800/50 backdrop-blur-lg rounded-xl shadow-lg border border-white/30 dark:border-slate-700 p-6">
                 <h2 class="text-3xl font-bold mb-5">Daily Planner</h2>
                 <form id="add-task-form" class="flex gap-2 mb-4">
-                    <input type="text" id="task-input" placeholder="e.g., Read Qur'an for 15 minutes" class="flex-grow p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600">
+                    <input type="text" id="task-input" placeholder="e.g., Read Qur'an for 15 minutes" class="flex-grow p-2 border rounded-lg bg-white/50 dark:bg-slate-700/50 border-slate-300 dark:border-slate-600">
                     <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg">Add Task</button>
                 </form>
-                <div id="task-list">
-                    </div>
+                <div id="task-list" class="space-y-2"></div>
             </section>
 
-            <section id="mood" class="app-section hidden text-center">
+            <section id="mood" class="app-section bg-white/50 dark:bg-slate-800/50 backdrop-blur-lg rounded-xl shadow-lg border border-white/30 dark:border-slate-700 p-6 hidden text-center">
                 <h2 class="text-3xl font-bold mb-5">How are you feeling today?</h2>
-                
-                <div id="mood-selector" class="flex justify-center space-x-4 md:space-x-8 mb-8">
-                    <button data-mood="happy" class="mood-emoji text-5xl p-3 rounded-full transform hover:scale-125 transition-transform duration-300">😊</button>
-                    <button data-mood="neutral" class="mood-emoji text-5xl p-3 rounded-full transform hover:scale-125 transition-transform duration-300">😐</button>
-                    <button data-mood="sad" class="mood-emoji text-5xl p-3 rounded-full transform hover:scale-125 transition-transform duration-300">😢</button>
-                    <button data-mood="stressed" class="mood-emoji text-5xl p-3 rounded-full transform hover:scale-125 transition-transform duration-300">😠</button>
-                    <button data-mood="grateful" class="mood-emoji text-5xl p-3 rounded-full transform hover:scale-125 transition-transform duration-300">🙏</button>
+                <div id="mood-selector" class="flex justify-center space-x-4 sm:space-x-6 md:space-x-8 mb-8">
+                    <button data-mood="happy" class="mood-emoji font-emoji text-4xl sm:text-5xl p-2 sm:p-3 rounded-full transform hover:scale-125 transition-transform duration-300">😊</button>
+                    <button data-mood="neutral" class="mood-emoji font-emoji text-4xl sm:text-5xl p-2 sm:p-3 rounded-full transform hover:scale-125 transition-transform duration-300">😐</button>
+                    <button data-mood="sad" class="mood-emoji font-emoji text-4xl sm:text-5xl p-2 sm:p-3 rounded-full transform hover:scale-125 transition-transform duration-300">😢</button>
+                    <button data-mood="stressed" class="mood-emoji font-emoji text-4xl sm:text-5xl p-2 sm:p-3 rounded-full transform hover:scale-125 transition-transform duration-300">😠</button>
+                    <button data-mood="grateful" class="mood-emoji font-emoji text-4xl sm:text-5xl p-2 sm:p-3 rounded-full transform hover:scale-125 transition-transform duration-300">🙏</button>
                 </div>
-
-                <div id="mood-content-display" class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg min-h-[150px] max-w-2xl mx-auto flex items-center justify-center hidden">
-                    <p id="mood-quote" class="text-lg italic text-gray-700 dark:text-gray-300"></p>
+                <div id="mood-content-display" class="bg-black/5 dark:bg-black/20 p-6 rounded-lg min-h-[150px] max-w-2xl mx-auto hidden">
+                    <p id="mood-quote" class="text-lg italic"></p>
                 </div>
             </section>
 
-            <section id="focus" class="app-section hidden text-center">
+            <section id="focus" class="app-section bg-white/50 dark:bg-slate-800/50 backdrop-blur-lg rounded-xl shadow-lg border border-white/30 dark:border-slate-700 p-6 hidden text-center">
                 <h2 class="text-3xl font-bold mb-5">Focus Mode</h2>
-
-                <div class="max-w-md mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-                    <input type="text" id="focus-task-input" placeholder="What is your focus for this session?" class="w-full p-2 mb-6 border-2 rounded-lg dark:bg-gray-700 dark:border-gray-600 text-center">
-
-                    <div id="timer-display" class="text-8xl font-bold text-gray-800 dark:text-gray-200 mb-6">
-                        25:00
-                    </div>
-
+                <div class="max-w-md mx-auto bg-black/5 dark:bg-black/20 rounded-lg p-6">
+                    <input type="text" id="focus-task-input" placeholder="What is your focus for this session?" class="w-full p-2 mb-6 border-2 rounded-lg bg-white/50 dark:bg-slate-700/50 border-slate-300 dark:border-slate-600 text-center">
+                    <div id="timer-display" class="text-8xl font-bold mb-6">25:00</div>
                     <div id="timer-controls" class="flex justify-center space-x-4">
                         <button id="start-pause-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-lg text-xl">Start</button>
                         <button id="reset-btn" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-8 rounded-lg text-xl">Reset</button>
                     </div>
                 </div>
-                
                 <div id="break-message" class="hidden mt-6 bg-green-100 dark:bg-green-900 border-l-4 border-green-500 text-green-700 dark:text-green-300 p-4 max-w-md mx-auto rounded-r-lg" role="alert">
                     <p class="font-bold">Break Time!</p>
                     <p>Time for a 5-minute break. Stretch, get some water, and relax.</p>
@@ -93,20 +91,18 @@
                 </div>
             </section>
 
-            <section id="challenge" class="app-section hidden">
+            <section id="challenge" class="app-section bg-white/50 dark:bg-slate-800/50 backdrop-blur-lg rounded-xl shadow-lg border border-white/30 dark:border-slate-700 p-6 hidden">
                 <h2 class="text-3xl font-bold mb-5 text-center">22-Day Challenge</h2>
-
                 <div class="max-w-2xl mx-auto">
-                    <div id="start-challenge-view" class="hidden bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 text-center">
+                    <div id="start-challenge-view" class="hidden text-center">
                         <h3 class="text-xl font-semibold mb-4">Start a New Habit Challenge</h3>
-                        <p class="text-gray-600 dark:text-gray-400 mb-6">Define a goal you want to commit to for 22 days.</p>
+                        <p class="mb-6">Define a goal you want to commit to for 22 days.</p>
                         <form id="start-challenge-form" class="flex flex-col sm:flex-row gap-2">
-                            <input type="text" id="challenge-goal-input" placeholder="e.g., Pray all 5 Salah on time" class="flex-grow p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600">
+                            <input type="text" id="challenge-goal-input" placeholder="e.g., Pray all 5 Salah on time" class="flex-grow p-2 border rounded-lg bg-white/50 dark:bg-slate-700/50 border-slate-300 dark:border-slate-600">
                             <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg">Start Challenge</button>
                         </form>
                     </div>
-
-                    <div id="active-challenge-view" class="hidden bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+                    <div id="active-challenge-view" class="hidden">
                         <div class="flex justify-between items-start mb-4">
                             <div>
                                 <p class="text-sm text-gray-500 dark:text-gray-400">Current Goal:</p>
@@ -114,58 +110,99 @@
                             </div>
                             <button id="reset-challenge-btn" class="text-sm text-red-500 hover:underline">Reset</button>
                         </div>
-                        
                         <div class="mb-6">
-                            <div class="w-full bg-gray-200 rounded-full dark:bg-gray-700">
-                                <div id="challenge-progress-bar" class="bg-green-500 text-xs font-medium text-blue-100 text-center p-0.5 leading-none rounded-full" style="width: 0%"> 0% </div>
-                            </div>
+                            <div class="w-full bg-gray-200 rounded-full dark:bg-gray-700"><div id="challenge-progress-bar" class="bg-green-500 text-xs font-medium text-blue-100 text-center p-0.5 leading-none rounded-full" style="width: 0%"> 0% </div></div>
                         </div>
-
-                        <div id="challenge-days-grid" class="grid grid-cols-4 sm:grid-cols-7 gap-4">
-                            </div>
+                        <div id="challenge-days-grid" class="grid grid-cols-4 sm:grid-cols-7 gap-4"></div>
                     </div>
                 </div>
             </section>
 
-            <section id="notes" class="app-section hidden">
-                <h2 class="text-3xl font-bold mb-5 text-center">Notes & Du'a Jar</h2>
-
-                <div class="max-w-xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-8">
-                    <form id="add-note-form">
-                        <textarea id="note-textarea" rows="4" class="w-full p-2 border-2 rounded-lg dark:bg-gray-700 dark:border-gray-600 focus:outline-none focus:border-blue-500" placeholder="Write freely... a thought, a moment of gratitude, or a Du'a."></textarea>
-                        
-                        <div class="mt-4">
-                            <h3 class="font-semibold mb-2 text-gray-700 dark:text-gray-300">Tag as:</h3>
-                            <div id="note-tags" class="flex flex-wrap gap-2">
-                                <label class="tag-label"><input type="radio" name="note-tag" value="Thought" class="sr-only" checked><span>Thought</span></label>
-                                <label class="tag-label"><input type="radio" name="note-tag" value="Gratitude" class="sr-only"><span>Gratitude</span></label>
-                                <label class="tag-label"><input type="radio" name="note-tag" value="Du'a" class="sr-only"><span>Du'a</span></label>
-                                <label class="tag-label"><input type="radio" name="note-tag" value="Stress" class="sr-only"><span>Stress</span></label>
-                            </div>
-                        </div>
-
-                        <button type="submit" class="w-full mt-6 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg">Save Note</button>
-                    </form>
+            <section id="notes" class="app-section bg-white/50 dark:bg-slate-800/50 backdrop-blur-lg rounded-xl shadow-lg border border-white/30 dark:border-slate-700 p-6 hidden">
+                <div class="relative flex justify-center items-center mb-5">
+                    <h2 class="text-3xl font-bold text-center">Notes & Du'a Jar</h2>
+                    <button id="add-note-btn" class="absolute right-0 top-0 text-blue-600 dark:text-blue-400 hover:scale-110 transition-transform duration-300">
+                        <ion-icon name="add-circle" class="text-4xl"></ion-icon>
+                    </button>
                 </div>
 
                 <div>
-                    <h3 class="text-2xl font-bold mb-4 text-center">Your Saved Notes</h3>
-                    <div id="notes-filter-bar" class="flex justify-center flex-wrap gap-2 mb-6">
-                        <button data-tag="All" class="filter-btn active-filter">All</button>
-                        <button data-tag="Thought" class="filter-btn">Thought</button>
-                        <button data-tag="Gratitude" class="filter-btn">Gratitude</button>
-                        <button data-tag="Du'a" class="filter-btn">Du'a</button>
-                        <button data-tag="Stress" class="filter-btn">Stress</button>
+                    <h3 class="text-2xl font-bold mb-4 text-center">Saved Notes</h3>
+                    <div id="notes-filter-bar" class="flex justify-center flex-wrap gap-3 mb-6">
+                        <button data-tag="All" class="filter-btn text-sm font-semibold rounded-full px-4 py-2 transition-all duration-200 backdrop-blur-sm bg-blue-500/80 dark:bg-blue-500/70 border-transparent text-white ring-2 ring-blue-300 dark:ring-blue-400">All</button>
+                        <button data-tag="Thought" class="filter-btn text-sm font-semibold rounded-full px-4 py-2 transition-all duration-200 backdrop-blur-sm bg-black/5 dark:bg-white/10 border border-slate-300/50 dark:border-slate-600/50 text-slate-700 dark:text-slate-300">Thought</button>
+                        <button data-tag="Gratitude" class="filter-btn text-sm font-semibold rounded-full px-4 py-2 transition-all duration-200 backdrop-blur-sm bg-black/5 dark:bg-white/10 border border-slate-300/50 dark:border-slate-600/50 text-slate-700 dark:text-slate-300">Gratitude</button>
+                        <button data-tag="Du'a" class="filter-btn text-sm font-semibold rounded-full px-4 py-2 transition-all duration-200 backdrop-blur-sm bg-black/5 dark:bg-white/10 border border-slate-300/50 dark:border-slate-600/50 text-slate-700 dark:text-slate-300">Du'a</button>
+                        <button data-tag="Stress" class="filter-btn text-sm font-semibold rounded-full px-4 py-2 transition-all duration-200 backdrop-blur-sm bg-black/5 dark:bg-white/10 border border-slate-300/50 dark:border-slate-600/50 text-slate-700 dark:text-slate-300">Stress</button>
                     </div>
                     <div id="notes-list" class="max-w-xl mx-auto space-y-4">
                         </div>
                 </div>
             </section>
+
         </main>
 
-        <footer class="text-center p-4 text-sm text-gray-500 dark:text-gray-400">
-            <p>LifePad+ v1.0 | A tool for mindful living.</p>
+        <nav id="mobile-nav" class="md:hidden fixed bottom-0 inset-x-0 z-50">
+            <div class="mx-4 mb-4">
+                <div class="flex justify-around items-center bg-white/50 dark:bg-slate-800/50 backdrop-blur-lg rounded-xl shadow-lg border border-white/30 dark:border-slate-700 px-2 py-3">
+                    <a href="#" data-target="planner" class="nav-link-mobile flex flex-col items-center justify-center text-slate-600 dark:text-slate-400">
+                        <ion-icon name="today-outline" class="text-2xl"></ion-icon><span class="text-xs font-medium">Planner</span>
+                    </a>
+                    <a href="#" data-target="mood" class="nav-link-mobile flex flex-col items-center justify-center text-slate-600 dark:text-slate-400">
+                        <ion-icon name="happy-outline" class="text-2xl"></ion-icon><span class="text-xs font-medium">Mood</span>
+                    </a>
+                    <a href="#" data-target="focus" class="nav-link-mobile flex flex-col items-center justify-center text-slate-600 dark:text-slate-400">
+                        <ion-icon name="time-outline" class="text-2xl"></ion-icon><span class="text-xs font-medium">Focus</span>
+                    </a>
+                    <a href="#" data-target="challenge" class="nav-link-mobile flex flex-col items-center justify-center text-slate-600 dark:text-slate-400">
+                        <ion-icon name="trophy-outline" class="text-2xl"></ion-icon><span class="text-xs font-medium">Challenge</span>
+                    </a>
+                    <a href="#" data-target="notes" class="nav-link-mobile flex flex-col items-center justify-center text-slate-600 dark:text-slate-400">
+                        <ion-icon name="document-text-outline" class="text-2xl"></ion-icon><span class="text-xs font-medium">Notes</span>
+                    </a>
+                </div>
+            </div>
+        </nav>
+
+        <footer class="text-center p-4 text-sm text-slate-600 dark:text-slate-400 mt-8 hidden md:block">
+            <p>LifePad+ | Built with 🤍</p>
         </footer>
+    </div>
+
+
+    <div id="add-note-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm hidden">
+        <div class="w-full max-w-xl bg-white/70 dark:bg-slate-800/70 backdrop-blur-lg rounded-xl shadow-lg border border-white/30 dark:border-slate-700 p-6 relative">
+            <button id="close-note-modal-btn" class="absolute top-3 right-3 text-slate-500 dark:text-slate-400 hover:scale-125 transition-transform">
+                <ion-icon name="close-circle" class="text-3xl"></ion-icon>
+            </button>
+
+            <form id="add-note-form">
+                <h3 class="text-2xl font-bold mb-5 text-center">Add New Note</h3>
+                <textarea id="note-textarea" rows="4" class="w-full p-2 border-2 rounded-lg bg-white/50 dark:bg-slate-700/50 border-slate-300 dark:border-slate-600 focus:outline-none focus:border-blue-500" placeholder="Write freely..."></textarea>
+                <div class="mt-4">
+                    <h3 class="font-semibold mb-2">Tag as:</h3>
+                    <div id="note-tags" class="flex flex-wrap gap-3">
+                        <label class="tag-label">
+                            <input type="radio" name="note-tag" value="Thought" class="sr-only" checked>
+                            <span class="inline-block cursor-pointer rounded-full px-4 py-2 text-sm font-semibold transition-all duration-200 backdrop-blur-sm bg-blue-500/80 dark:bg-blue-500/70 border-transparent text-white ring-2 ring-blue-300 dark:ring-blue-400">Thought</span>
+                        </label>
+                        <label class="tag-label">
+                            <input type="radio" name="note-tag" value="Gratitude" class="sr-only">
+                            <span class="inline-block cursor-pointer rounded-full px-4 py-2 text-sm font-semibold transition-all duration-200 backdrop-blur-sm bg-black/5 dark:bg-white/10 border border-slate-300/50 dark:border-slate-600/50 text-slate-700 dark:text-slate-300">Gratitude</span>
+                        </label>
+                        <label class="tag-label">
+                            <input type="radio" name="note-tag" value="Du'a" class="sr-only">
+                            <span class="inline-block cursor-pointer rounded-full px-4 py-2 text-sm font-semibold transition-all duration-200 backdrop-blur-sm bg-black/5 dark:bg-white/10 border border-slate-300/50 dark:border-slate-600/50 text-slate-700 dark:text-slate-300">Du'a</span>
+                        </label>
+                        <label class="tag-label">
+                            <input type="radio" name="note-tag" value="Stress" class="sr-only">
+                            <span class="inline-block cursor-pointer rounded-full px-4 py-2 text-sm font-semibold transition-all duration-200 backdrop-blur-sm bg-black/5 dark:bg-white/10 border border-slate-300/50 dark:border-slate-600/50 text-slate-700 dark:text-slate-300">Stress</span>
+                        </label>
+                    </div>
+                </div>
+                <button type="submit" class="w-full mt-6 bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-lg">Save Note</button>
+            </form>
+        </div>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
@@ -174,7 +211,6 @@
     
     <script src="firebase-config.js"></script>
     <script type="module" src="js/main.js"></script>
-    <script type="module" src="js/focus.js"></script>
 
 </body>
 </html>

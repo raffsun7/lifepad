@@ -1,16 +1,29 @@
 // js/notes.js
 
 // --- DOM Elements ---
+const addNoteBtn = document.getElementById('add-note-btn');
+const addNoteModal = document.getElementById('add-note-modal');
+const closeNoteModalBtn = document.getElementById('close-note-modal-btn');
 const addNoteForm = document.getElementById('add-note-form');
 const noteTextarea = document.getElementById('note-textarea');
 const notesList = document.getElementById('notes-list');
 const notesFilterBar = document.getElementById('notes-filter-bar');
-const noteTagsContainer = document.getElementById('note-tags'); // The container for tag buttons
+const noteTagsContainer = document.getElementById('note-tags');
 
 // --- State ---
 let user = null;
 let notesCollection;
-let allNotes = []; // Local cache of all notes
+let allNotes = [];
+
+// --- Modal Control Functions ---
+function openNoteModal() {
+    addNoteModal.classList.remove('hidden');
+}
+
+function closeNoteModal() {
+    addNoteModal.classList.add('hidden');
+    noteTextarea.value = ''; // Clear textarea on close
+}
 
 // --- Utility to get the tag color ---
 const getTagColor = (tag) => {
@@ -24,24 +37,22 @@ const getTagColor = (tag) => {
 };
 
 // --- Core Functions ---
-
 function renderNotes(notesToRender) {
-    notesList.innerHTML = ''; // Clear the list
+    notesList.innerHTML = '';
     if (notesToRender.length === 0) {
         notesList.innerHTML = `<p class="text-center text-gray-500 dark:text-gray-400">No notes found for this category.</p>`;
         return;
     }
     notesToRender.forEach(note => {
         const noteEl = document.createElement('div');
-        noteEl.className = 'note-card bg-white dark:bg-gray-800 p-4 rounded-lg shadow';
-        const date = note.createdAt ? note.createdAt.toDate().toLocaleDateString() : 'Just now';
-        
+        noteEl.className = 'note-card bg-white/60 dark:bg-slate-800/60 p-4 rounded-lg shadow';
+        const date = note.createdAt ? note.createdAt.toDate().toLocaleString(undefined, { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' }) : 'Just now';
         noteEl.innerHTML = `
             <p class="text-gray-800 dark:text-gray-300 mb-3 whitespace-pre-wrap">${note.textContent}</p>
             <div class="flex justify-between items-center">
                 <div>
                     <span class="tag ${getTagColor(note.tag)} text-xs font-semibold mr-2 px-2.5 py-0.5 rounded-full">${note.tag}</span>
-                    <span class="text-xs text-gray-500 dark:text-gray-400">${date}</span>
+                    <span class="text-xs text-gray-500 dark:text-gray-400 font-medium">${date}</span>
                 </div>
                 <button data-id="${note.id}" class="delete-note-btn text-red-500 hover:text-red-700 text-sm font-semibold">Delete</button>
             </div>
@@ -54,7 +65,7 @@ function fetchNotes() {
     if (!notesCollection) return;
     notesCollection.orderBy("createdAt", "desc").onSnapshot(snapshot => {
         allNotes = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        const currentFilter = document.querySelector('.filter-btn.active-filter').dataset.tag;
+        const currentFilter = notesFilterBar.querySelector('.bg-blue-500\\/80')?.dataset.tag || 'All';
         handleFilterNotes(currentFilter);
     });
 }
@@ -76,7 +87,7 @@ async function handleSaveNote(e) {
             tag: selectedTag,
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
-        noteTextarea.value = ''; // Clear textarea
+        closeNoteModal(); // Close modal after successful save
     } else if (!user) {
         alert("Please log in to save notes.");
     }
@@ -92,37 +103,31 @@ async function handleDeleteNote(e) {
 }
 
 function handleFilterNotes(tag) {
+    const baseClasses = "filter-btn text-sm font-semibold rounded-full px-4 py-2 transition-all duration-200 backdrop-blur-sm";
+    const activeClasses = `${baseClasses} bg-blue-500/80 dark:bg-blue-500/70 border-transparent text-white ring-2 ring-blue-300 dark:ring-blue-400`;
+    const inactiveClasses = `${baseClasses} bg-black/5 dark:bg-white/10 border border-slate-300/50 dark:border-slate-600/50 text-slate-700 dark:text-slate-300`;
+
     document.querySelectorAll('.filter-btn').forEach(btn => {
-        btn.classList.remove('active-filter', 'bg-blue-600', 'text-white');
-        if (btn.dataset.tag === tag) {
-            btn.classList.add('active-filter', 'bg-blue-600', 'text-white');
-        }
+        btn.className = (btn.dataset.tag === tag) ? activeClasses : inactiveClasses;
     });
 
-    if (tag === 'All') {
-        renderNotes(allNotes);
-    } else {
-        const filteredNotes = allNotes.filter(note => note.tag === tag);
-        renderNotes(filteredNotes);
-    }
+    const filteredNotes = (tag === 'All') ? allNotes : allNotes.filter(note => note.tag === tag);
+    renderNotes(filteredNotes);
 }
 
-// ** NEW FUNCTION TO HANDLE TAG SELECTION UI **
 function handleTagSelectionUI(e) {
     const targetSpan = e.target.closest('span');
     if (!targetSpan || !e.currentTarget.contains(targetSpan)) return;
 
-    // Visually update all tags
+    const baseClasses = "inline-block cursor-pointer rounded-full px-4 py-2 text-sm font-semibold transition-all duration-200 backdrop-blur-sm";
+    const activeClasses = `${baseClasses} bg-blue-500/80 dark:bg-blue-500/70 border-transparent text-white ring-2 ring-blue-300 dark:ring-blue-400`;
+    const inactiveClasses = `${baseClasses} bg-black/5 dark:bg-white/10 border border-slate-300/50 dark:border-slate-600/50 text-slate-700 dark:text-slate-300`;
+
     noteTagsContainer.querySelectorAll('span').forEach(span => {
-        span.classList.remove('bg-blue-500', 'text-white');
-        span.classList.add('bg-gray-200', 'dark:bg-gray-700');
+        span.className = inactiveClasses;
     });
-
-    // Visually update the selected tag
-    targetSpan.classList.add('bg-blue-500', 'text-white');
-    targetSpan.classList.remove('bg-gray-200', 'dark:bg-gray-700');
+    targetSpan.className = activeClasses;
 }
-
 
 // --- Initialization ---
 export function initNotes(currentUser) {
@@ -132,19 +137,29 @@ export function initNotes(currentUser) {
         fetchNotes();
     } else {
         allNotes = [];
-        renderNotes([]); // Clear notes on logout
+        renderNotes([]);
     }
 
     if (!addNoteForm.dataset.initialized) {
+        // Modal and form listeners
+        addNoteBtn.addEventListener('click', openNoteModal);
+        closeNoteModalBtn.addEventListener('click', closeNoteModal);
+        addNoteModal.addEventListener('click', (e) => {
+            if (e.target === addNoteModal) { // Close if clicking on the overlay backdrop
+                closeNoteModal();
+            }
+        });
         addNoteForm.addEventListener('submit', handleSaveNote);
+
+        // Other listeners
         notesList.addEventListener('click', handleDeleteNote);
         notesFilterBar.addEventListener('click', (e) => {
             if(e.target.classList.contains('filter-btn')) {
                 handleFilterNotes(e.target.dataset.tag);
             }
         });
-        // ** ADDED EVENT LISTENER FOR TAGS **
         noteTagsContainer.addEventListener('click', handleTagSelectionUI);
+
         addNoteForm.dataset.initialized = 'true';
     }
 }
