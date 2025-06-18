@@ -51,26 +51,41 @@
 
         <main class="flex-grow container mx-auto px-4">
             
-            <section id="planner" class="app-section bg-white/50 dark:bg-slate-800/50 backdrop-blur-lg rounded-xl shadow-lg border border-white/30 dark:border-slate-700 p-6">
-                <h2 class="text-3xl font-bold mb-5">Daily Planner</h2>
-                <form id="add-task-form" class="flex gap-2 mb-4">
-                    <input type="text" id="task-input" placeholder="e.g., Read Qur'an for 15 minutes" class="flex-grow p-2 border rounded-lg bg-white/50 dark:bg-slate-700/50 border-slate-300 dark:border-slate-600">
-                    <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg">Add Task</button>
-                </form>
-                <div id="task-list" class="space-y-2"></div>
-            </section>
+        <section id="planner" class="app-section bg-white/50 dark:bg-slate-800/50 backdrop-blur-lg rounded-xl shadow-lg border border-white/30 dark:border-slate-700 p-6">
+            <h2 class="text-3xl font-bold mb-5 text-center">Daily Planner</h2>
+            <form id="add-task-form" class="flex flex-col sm:flex-row gap-2 mb-6">
+                <input type="text" id="task-input" placeholder="e.g., Read Qur'an for 15 minutes" class="flex-grow p-3 border rounded-lg bg-white/50 dark:bg-slate-700/50 border-slate-300 dark:border-slate-600 focus:ring-2 focus:ring-blue-400 focus:outline-none">
+                <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg transition-transform duration-200 hover:scale-105">Add Task</button>
+            </form>
+            <div id="task-list" class="space-y-3">
+                </div>
+        </section>
 
             <section id="mood" class="app-section bg-white/50 dark:bg-slate-800/50 backdrop-blur-lg rounded-xl shadow-lg border border-white/30 dark:border-slate-700 p-6 hidden text-center">
-                <h2 class="text-3xl font-bold mb-5">How are you feeling today?</h2>
-                <div id="mood-selector" class="flex justify-center space-x-4 sm:space-x-6 md:space-x-8 mb-8">
-                    <button data-mood="happy" class="mood-emoji font-emoji text-4xl sm:text-5xl p-2 sm:p-3 rounded-full transform hover:scale-125 transition-transform duration-300">😊</button>
-                    <button data-mood="neutral" class="mood-emoji font-emoji text-4xl sm:text-5xl p-2 sm:p-3 rounded-full transform hover:scale-125 transition-transform duration-300">😐</button>
-                    <button data-mood="sad" class="mood-emoji font-emoji text-4xl sm:text-5xl p-2 sm:p-3 rounded-full transform hover:scale-125 transition-transform duration-300">😢</button>
-                    <button data-mood="stressed" class="mood-emoji font-emoji text-4xl sm:text-5xl p-2 sm:p-3 rounded-full transform hover:scale-125 transition-transform duration-300">😠</button>
-                    <button data-mood="grateful" class="mood-emoji font-emoji text-4xl sm:text-5xl p-2 sm:p-3 rounded-full transform hover:scale-125 transition-transform duration-300">🙏</button>
-                </div>
-                <div id="mood-content-display" class="bg-black/5 dark:bg-black/20 p-6 rounded-lg min-h-[150px] max-w-2xl mx-auto hidden">
-                    <p id="mood-quote" class="text-lg italic"></p>
+                <h2 class="text-3xl font-bold mb-2">Your AI Companion</h2>
+                <p class="text-slate-600 dark:text-slate-400 mb-6">How are you truly feeling right now? Tell me anything.</p>
+                
+                <div class="max-w-2xl mx-auto">
+                    <form id="ai-mood-form">
+                        <textarea id="mood-input" rows="3" class="w-full p-3 border rounded-lg bg-white/50 dark:bg-slate-700/50 border-slate-300 dark:border-slate-600 focus:ring-2 focus:ring-blue-400 focus:outline-none" placeholder="e.g., I'm feeling a bit anxious about my exams..."></textarea>
+                        <button type="submit" class="w-full mt-4 bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg transition-transform duration-200 hover:scale-105">Get a Friendly Word</button>
+                    </form>
+
+                    <div id="ai-response-area" class="mt-6 bg-black/5 dark:bg-black/20 p-6 rounded-lg min-h-[150px] text-left hidden">
+                        <div id="ai-loading-spinner" class="flex justify-center items-center h-full hidden">
+                            <svg class="animate-spin h-8 w-8 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                        </div>
+                        <div id="ai-response-content" class="text-slate-800 dark:text-slate-200 whitespace-pre-wrap"></div>
+                    </div>
+
+                    <div id="ai-history-container" class="mt-10 pt-6 border-t border-slate-300 dark:border-slate-700">
+                        <div class="flex justify-between items-center mb-6 px-1">
+                            <h3 class="text-2xl font-bold text-center">Your Past Conversations</h3>
+                            <button id="clear-history-btn" class="text-sm font-semibold text-red-500 hover:underline">Clear All</button>
+                        </div>
+                        <div id="past-chats-list" class="space-y-2">
+                            </div>
+                    </div>
                 </div>
             </section>
 
@@ -202,6 +217,40 @@
                 </div>
                 <button type="submit" class="w-full mt-6 bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-lg">Save Note</button>
             </form>
+        </div>
+    </div>
+
+
+    <div id="edit-task-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm hidden">
+        <div class="w-full max-w-xl bg-white/70 dark:bg-slate-800/70 backdrop-blur-lg rounded-xl shadow-lg border border-white/30 dark:border-slate-700 p-6 relative">
+            <button id="close-edit-modal-btn" class="absolute top-3 right-3 text-slate-500 dark:text-slate-400 hover:scale-125 transition-transform">
+                <ion-icon name="close-circle" class="text-3xl"></ion-icon>
+            </button>
+            <form id="edit-task-form">
+                <h3 class="text-2xl font-bold mb-5 text-center">Edit Task</h3>
+                <input type="text" id="edit-task-input" class="w-full p-3 border rounded-lg bg-white/50 dark:bg-slate-700/50 border-slate-300 dark:border-slate-600 focus:ring-2 focus:ring-blue-400 focus:outline-none">
+                <button type="submit" class="w-full mt-6 bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-lg">Save Changes</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="history-detail-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm hidden">
+        <div class="w-full max-w-2xl bg-white/70 dark:bg-slate-800/70 backdrop-blur-lg rounded-xl shadow-lg border border-white/30 dark:border-slate-700 p-6 relative max-h-[80vh] overflow-y-auto">
+            <button id="close-history-modal-btn" class="absolute top-3 right-3 text-slate-500 dark:text-slate-400 hover:scale-125 transition-transform">
+                <ion-icon name="close-circle" class="text-3xl"></ion-icon>
+            </button>
+
+            <div id="history-modal-content">
+                <p id="history-modal-date" class="text-xs text-slate-500 dark:text-slate-400 font-semibold mb-4"></p>
+                <div class="mb-4">
+                    <p class="font-bold text-slate-700 dark:text-slate-300 text-lg">You said:</p>
+                    <p id="history-modal-user-query" class="pl-2 italic text-lg">"</p>
+                </div>
+                <div>
+                    <p class="font-bold text-slate-700 dark:text-slate-300 text-lg">Yaqeen replied:</p>
+                    <p id="history-modal-ai-response" class="pl-2 whitespace-pre-wrap text-lg"></p>
+                </div>
+            </div>
         </div>
     </div>
 
