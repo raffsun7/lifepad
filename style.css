@@ -1,0 +1,24 @@
+/* style.css */
+
+/* Import Google Font */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+body {
+    font-family: 'Inter', sans-serif;
+}
+
+/* Style for the active navigation link */
+.nav-link.active-link {
+    /* These styles are now applied directly in the ui.js file */
+    /* This rule is intentionally left empty, the logic is in JS */
+}
+
+/* Simple fade-in animation for sections */
+.app-section {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
