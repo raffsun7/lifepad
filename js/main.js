@@ -12,7 +12,6 @@ function onReady() {
     // --- Initialize all modules that DON'T depend on the user ---
     initTheme();
     initNavigation();
-    initFocus();
     showSection('planner'); // Show the planner by default
 
     // --- Listen for auth changes and initialize all modules that DO depend on the user ---
@@ -23,7 +22,8 @@ function onReady() {
         initPlanner(user);
         initNotes(user);
         initChallenge(user);
-        initMood(user); // MOVED HERE - This is the correct location
+        initMood(user);
+        initFocus(user); // MOVED HERE - Now depends on user for history
     });
 }
 
