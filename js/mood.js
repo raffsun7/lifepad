@@ -93,7 +93,7 @@ async function saveConversation(userInput, aiResponse) {
     }
 }
 
-function renderHistory(historyItems) {
+function renderHistory(historyItems) { //
     pastChatsList.innerHTML = '';
     if (historyItems.length === 0) {
         pastChatsList.innerHTML = `<p class="text-center text-xs text-slate-500 dark:text-slate-400">Your saved chats will appear here.</p>`;
@@ -105,9 +105,14 @@ function renderHistory(historyItems) {
             'history-item flex items-center justify-between w-full text-left bg-black/5 dark:bg-black/20 p-2 rounded-lg';
 
         const clickableArea = document.createElement('div');
-        clickableArea.className = 'history-item-btn flex-grow cursor-pointer pr-2';
+        clickableArea.className = 'history-item-btn flex-grow cursor-pointer pr-2 min-w-0'; // Added min-w-0 to help flexbox truncate
         clickableArea.dataset.historyItem = JSON.stringify(item);
-        clickableArea.innerHTML = `<p class="font-medium text-slate-700 dark:text-slate-300 text-sm truncate">${item.userQuery}</p>`;
+        
+        // Truncate the text if it's too long
+        const query = item.userQuery;
+        const truncatedQuery = query.length > 35 ? query.substring(0, 35) + '.....' : query;
+        
+        clickableArea.innerHTML = `<p class="font-medium text-slate-700 dark:text-slate-300 text-sm whitespace-nowrap overflow-hidden text-ellipsis">${truncatedQuery}</p>`;
 
         const deleteBtn = document.createElement('button');
         deleteBtn.className = 'delete-history-btn flex-shrink-0 p-1 text-red-500 hover:text-red-700 rounded-full';
