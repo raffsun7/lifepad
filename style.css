@@ -1,18 +1,68 @@
-/* style.css */
+/* style.css - Modern Glass & Black Theme */
 
 /* Import Google Font */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Noto+Color+Emoji&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 body {
     font-family: 'Inter', sans-serif;
 }
 
-/* Style for the active navigation link */
-.nav-link.active-link {
-    /* These styles are now applied directly in the ui.js file */
-    /* This rule is intentionally left empty, the logic is in JS */
+/* Base class for all glass panels */
+.glass-pane {
+    position: relative;
+    overflow: hidden;
+    /* The main glass effect is applied via Tailwind classes in the HTML */
 }
+
+/* Custom pseudo-element for the "aurora" shine effect */
+.glass-pane::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    opacity: 0.15;
+    background: radial-gradient(
+        800px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+        rgba(255, 255, 255, 0.4),
+        transparent 40%
+    );
+    transition: opacity 0.3s ease;
+}
+
+.dark .glass-pane::before {
+    opacity: 0.1;
+     background: radial-gradient(
+        800px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+        rgba(255, 255, 255, 0.2),
+        transparent 40%
+    );
+}
+
+h1.text-2xl.font-bold.bg-clip-text.text-transparent.bg-gradient-to-r.from-sky-500.to-cyan-500 {
+        background: linear-gradient(90deg, #002531, #006bff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.dark h1.text-2xl.font-bold.bg-clip-text.text-transparent.bg-gradient-to-r.from-sky-500.to-cyan-500 {
+        cursor: pointer;
+        background: linear-gradient(90deg, #00e8ff, #0003ff);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+}
+
+/* Style for the active navigation links */
+.nav-link.active-link, .nav-link-mobile.active-link {
+    color: #0284c7; /* Tailwind's sky-600 */
+}
+
+.dark .nav-link.active-link, .dark .nav-link-mobile.active-link {
+    color: #38bdf8; /* Tailwind's sky-400 */
+}
+
 
 /* Simple fade-in animation for sections */
 .app-section {
@@ -23,22 +73,49 @@ body {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
 }
-.nav-link.active-link, .nav-link-mobile.active-link {
-    color: #2563EB; /* This is Tailwind's blue-600 */
+
+button.bg-sky-500.hover\:bg-sky-600.text-white.font-bold.py-3.px-6.rounded-lg.transition-all.duration-200.hover\:scale-105.shadow-md {
+    background: linear-gradient(145deg, #006bff 0%, #00c0ff 100%);
 }
 
-/* For dark mode active links, we'll rely on the class added by JS */
-.dark .nav-link.active-link, .dark .nav-link-mobile.active-link {
-    color: #60A5FA; /* This is Tailwind's blue-400 */
-}
-.glass-card {
-    @apply bg-white/50 dark:bg-slate-800/50 backdrop-blur-lg rounded-xl shadow-lg border border-white/30 dark:border-slate-700 p-6;
+h2.text-3xl.font-bold.mb-6.text-center {
+    background: linear-gradient(to right, #00eaff, #0011ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
 }
 
-/* Style for the active navigation links */
-.nav-link.active-link, .nav-link-mobile.active-link {
-    @apply text-blue-600 dark:text-blue-400;
+.dark h2.text-3xl.font-bold.mb-6.text-center {
+    background: linear-gradient(to right, #cce6ff, #88bfff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
 }
-.font-emoji {
-    font-family: "Noto Color Emoji", sans-serif;
+
+.dark h2.text-2xl.font-bold.text-center {
+    background: linear-gradient(to right, #15fff2, #0034fd);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+h2.text-2xl.font-bold.text-center {
+    background: linear-gradient(to right, #000000, #88bfff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.dark h2.text-3xl.font-bold.mb-5 {
+    background: linear-gradient(109deg, #ffffff, #0400ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+h2.text-3xl.font-bold.text-center {
+    background: linear-gradient(90deg, #000000, #0076ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.dark h2.text-3xl.font-bold.text-center {
+    background: linear-gradient(to right, #cce6ff, #0076ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
 }

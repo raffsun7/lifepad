@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="en" class="light"> <head>
+<html lang="en" class="light">
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LifePad+ | Smart Daily Planner</title>
@@ -7,7 +8,19 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
-        darkMode: 'class'
+        darkMode: 'class',
+        theme: {
+            extend: {
+                colors: {
+                    // Custom colors for our new black theme
+                    'dark-bg': '#0a0a0a',
+                    'dark-card': '#1a1a1a',
+                    'dark-border': 'rgba(255, 255, 255, 0.1)',
+                    'dark-text': '#d4d4d4',
+                    'dark-accent': '#2dd4bf', // Teal accent
+                }
+            }
+        }
       }
     </script>
     
@@ -20,83 +33,72 @@
     <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
     <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
 </head>
-<body class="bg-gray-200 dark:bg-slate-900 font-sans text-slate-800 dark:text-slate-200">
-    <div class="fixed inset-0 -z-10 h-full w-full bg-white bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:14px_24px] dark:bg-slate-900"><div class="fixed inset-0 -z-10 h-full w-full bg-[radial-gradient(circle_500px_at_50%_200px,#C9EBFF,transparent)] dark:bg-[radial-gradient(circle_500px_at_50%_200px,#334155,transparent)]"></div></div>
+<body class="bg-gray-100 dark:bg-dark-bg text-gray-800 dark:text-dark-text font-sans transition-colors duration-300">
+    
+    <div id="app" class="min-h-screen flex flex-col pb-24 md:pb-0">
 
-    <div id="app" class="min-h-screen flex flex-col pb-20 md:pb-0">
+        <header class="sticky top-0 z-40 p-4">
+            <div class="glass-pane flex justify-between items-center bg-white/60 dark:bg-dark-card/60 backdrop-blur-xl rounded-2xl shadow-xl border border-white/20 dark:border-dark-border px-4 py-3">
+                <h1 class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-sky-500 to-cyan-500">LifePad+</h1>
+                
+                <nav id="main-nav" class="hidden md:flex items-center space-x-6 text-gray-600 dark:text-gray-300 font-medium">
+                    <a href="#" data-target="planner" class="nav-link hover:text-sky-500 transition-colors">Planner</a>
+                    <a href="#" data-target="mood" class="nav-link hover:text-sky-500 transition-colors">Mood</a>
+                    <a href="#" data-target="focus" class="nav-link hover:text-sky-500 transition-colors">Focus</a>
+                    <a href="#" data-target="challenge" class="nav-link hover:text-sky-500 transition-colors">Challenge</a>
+                    <a href="#" data-target="notes" class="nav-link hover:text-sky-500 transition-colors">Notes</a>
+                </nav>
 
-        <header class="sticky top-0 z-40">
-            <div class="container mx-auto px-4 py-3">
-                <div class="flex justify-between items-center bg-white/50 dark:bg-slate-800/50 backdrop-blur-lg rounded-xl shadow-lg border border-white/30 dark:border-slate-700 px-4 py-3">
-                    <h1 class="text-2xl font-bold text-blue-600 dark:text-blue-400">LifePad+</h1>
-                    
-                    <nav id="main-nav" class="hidden md:flex items-center space-x-6 text-slate-700 dark:text-slate-300 font-medium">
-                        <a href="#" data-target="planner" class="nav-link">Planner</a>
-                        <a href="#" data-target="mood" class="nav-link">Mood</a>
-                        <a href="#" data-target="focus" class="nav-link">Focus</a>
-                        <a href="#" data-target="challenge" class="nav-link">Challenge</a>
-                        <a href="#" data-target="notes" class="nav-link">Notes</a>
-                    </nav>
-
-                    <div class="flex items-center space-x-2 sm:space-x-4">
-                        <button id="theme-toggle-btn" class="p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10">
-                            <svg id="theme-toggle-sun-icon" class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.121-3.536a1 1 0 011.414 0l.707.707a1 1 0 01-1.414 1.414l-.707-.707a1 1 0 010-1.414zM10 18a1 1 0 01-1-1v-1a1 1 0 112 0v1a1 1 0 01-1 1zm-4.95-2.464a1 1 0 010 1.414l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 0zm-2.121-3.536a1 1 0 00-1.414 0l-.707.707a1 1 0 001.414 1.414l.707-.707a1 1 0 000-1.414zM10 4a1 1 0 00-1-1V2a1 1 0 10-2 0v1a1 1 0 002 0 1 1 0 00-1 1z" fill-rule="evenodd" clip-rule="evenodd"></path></svg>
-                            <svg id="theme-toggle-moon-icon" class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
-                        </button>
-                        <div id="auth-container" class="flex items-center"></div>
-                    </div>
+                <div class="flex items-center space-x-3">
+<button id="theme-toggle-btn" class="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
+    <svg id="theme-toggle-sun-icon" class="w-6 h-6" fill="currentColor" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+        <path d="M361.5 1.2c5 2.1 8.6 6.6 9.6 11.9L391 121l107.9 19.8c5.3 1 9.8 4.6 11.9 9.6s1.5 10.7-1.6 15.2L446.9 256l62.3 90.3c3.1 4.5 3.7 10.2 1.6 15.2s-6.6 8.6-11.9 9.6L391 391 371.1 498.9c-1 5.3-4.6 9.8-9.6 11.9s-10.7 1.5-15.2-1.6L256 446.9l-90.3 62.3c-4.5 3.1-10.2 3.7-15.2 1.6s-8.6-6.6-9.6-11.9L121 391 13.1 371.1c-5.3-1-9.8-4.6-11.9-9.6s-1.5-10.7 1.6-15.2L65.1 256 2.8 165.7c-3.1-4.5-3.7-10.2-1.6-15.2s6.6-8.6 11.9-9.6L121 121 140.9 13.1c1-5.3 4.6-9.8 9.6-11.9s10.7-1.5 15.2 1.6L256 65.1 346.3 2.8c4.5-3.1 10.2-3.7 15.2-1.6zM160 256a96 96 0 1 1 192 0 96 96 0 1 1 -192 0zm224 0a128 128 0 1 0 -256 0 128 128 0 1 0 256 0z"/>
+    </svg>
+    <svg id="theme-toggle-moon-icon" class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+</button>
+                    <div id="auth-container" class="flex items-center"></div>
                 </div>
             </div>
         </header>
 
         <main class="flex-grow container mx-auto px-4">
             
-        <section id="planner" class="app-section bg-white/50 dark:bg-slate-800/50 backdrop-blur-lg rounded-xl shadow-lg border border-white/30 dark:border-slate-700 p-6">
-            <h2 class="text-3xl font-bold mb-5 text-center">Daily Planner</h2>
-            <form id="add-task-form" class="flex flex-col sm:flex-row gap-2 mb-6">
-                <input type="text" id="task-input" placeholder="e.g., Read Qur'an for 15 minutes" class="flex-grow p-3 border rounded-lg bg-white/50 dark:bg-slate-700/50 border-slate-300 dark:border-slate-600 focus:ring-2 focus:ring-blue-400 focus:outline-none">
-                <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg transition-transform duration-200 hover:scale-105">Add Task</button>
-            </form>
-            <div id="task-list" class="space-y-3">
-                </div>
-        </section>
+            <section id="planner" class="glass-pane app-section bg-white/60 dark:bg-dark-card/60 backdrop-blur-xl rounded-2xl shadow-xl border border-white/20 dark:border-dark-border p-8">
+                <h2 class="text-3xl font-bold mb-6 text-center">Daily Planner</h2>
+                <form id="add-task-form" class="flex flex-col sm:flex-row gap-3 mb-6">
+                    <input type="text" id="task-input" placeholder="e.g., Read Qur'an for 15 minutes" class="flex-grow p-3 border rounded-lg bg-white/50 dark:bg-black/20 border-gray-300 dark:border-dark-border focus:ring-2 focus:ring-sky-400 focus:outline-none">
+                    <button type="submit" class="bg-sky-500 hover:bg-sky-600 text-white font-bold py-3 px-6 rounded-lg transition-all duration-200 hover:scale-105 shadow-md">Add Task</button>
+                </form>
+                <div id="task-list" class="space-y-3"></div>
+            </section>
 
-            <section id="mood" class="app-section bg-white/50 dark:bg-slate-800/50 backdrop-blur-lg rounded-xl shadow-lg border border-white/30 dark:border-slate-700 p-6 hidden text-center">
-                <h2 class="text-3xl font-bold mb-2">Your AI Companion</h2>
-                <p class="text-slate-600 dark:text-slate-400 mb-6">How are you truly feeling right now? Tell me anything.</p>
-                
-                <div class="max-w-2xl mx-auto">
-                    <form id="ai-mood-form">
-                        <textarea id="mood-input" rows="3" class="w-full p-3 border rounded-lg bg-white/50 dark:bg-slate-700/50 border-slate-300 dark:border-slate-600 focus:ring-2 focus:ring-blue-400 focus:outline-none" placeholder="e.g., I'm feeling a bit anxious about my exams..."></textarea>
-                        <button type="submit" class="w-full mt-4 bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg transition-transform duration-200 hover:scale-105">Get a Friendly Word</button>
+            <section id="mood" class="app-section bg-white/60 dark:bg-dark-card/60 backdrop-blur-xl rounded-2xl shadow-xl border border-white/20 dark:border-dark-border p-0 hidden flex flex-col" style="height: 90vh;">
+                <div class="flex-shrink-0 p-4 border-b border-slate-300/70 dark:border-dark-border/70"><h2 class="text-2xl font-bold text-center">Your AI Companion</h2></div>
+                <div class="flex-grow basis-0 p-4 overflow-y-auto">
+                    <form id="ai-mood-form" class="max-w-2xl mx-auto">
+                        <p class="text-gray-500 dark:text-gray-400 mb-4 text-center">How are you truly feeling right now?</p>
+                        <textarea id="mood-input" rows="3" class="w-full p-3 border rounded-lg bg-white/50 dark:bg-black/20 border-gray-300 dark:border-dark-border focus:ring-2 focus:ring-sky-400 focus:outline-none" placeholder="e.g., I'm feeling a bit anxious about my exams..."></textarea>
+                        <button type="submit" class="w-full mt-4 bg-sky-500 hover:bg-sky-600 text-white font-bold py-3 px-6 rounded-lg transition-all duration-200 hover:scale-105 shadow-md">Get a Friendly Word</button>
                     </form>
-
-                    <div id="ai-response-area" class="mt-6 bg-black/5 dark:bg-black/20 p-6 rounded-lg min-h-[150px] text-left hidden">
-                        <div id="ai-loading-spinner" class="flex justify-center items-center h-full hidden">
-                            <svg class="animate-spin h-8 w-8 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                        </div>
-                        <div id="ai-response-content" class="text-slate-800 dark:text-slate-200 whitespace-pre-wrap"></div>
+                    <div id="ai-response-area" class="mt-6 max-w-2xl mx-auto bg-black/5 dark:bg-black/10 p-6 rounded-lg min-h-[150px] text-left hidden">
+                        <div id="ai-loading-spinner" class="flex justify-center items-center h-full hidden"><svg class="animate-spin h-8 w-8 text-sky-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg></div>
+                        <div id="ai-response-content" class="whitespace-pre-wrap"></div>
                     </div>
-
-                    <div id="ai-history-container" class="mt-10 pt-6 border-t border-slate-300 dark:border-slate-700">
-                        <div class="flex justify-between items-center mb-6 px-1">
-                            <h3 class="text-2xl font-bold text-center">Your Past Conversations</h3>
-                            <button id="clear-history-btn" class="text-sm font-semibold text-red-500 hover:underline">Clear All</button>
-                        </div>
-                        <div id="past-chats-list" class="space-y-2">
-                            </div>
+                    <div id="ai-history-container" class="mt-10 pt-6 max-w-2xl mx-auto border-t border-gray-300 dark:border-dark-border">
+                        <div class="flex justify-between items-center mb-4 px-1"><h3 class="text-xl font-bold">Past Conversations</h3><button id="clear-history-btn" class="text-xs font-semibold text-red-500 hover:underline">Clear All</button></div>
+                        <div id="past-chats-list" class="space-y-2"></div>
                     </div>
                 </div>
             </section>
-
-            <section id="focus" class="app-section bg-white/50 dark:bg-slate-800/50 backdrop-blur-lg rounded-xl shadow-lg border border-white/30 dark:border-slate-700 p-6 hidden text-center">
-                <h2 class="text-3xl font-bold mb-5">Focus Mode</h2>
-                <div class="max-w-md mx-auto bg-black/5 dark:bg-black/20 rounded-lg p-6">
-                    <input type="text" id="focus-task-input" placeholder="What is your focus for this session?" class="w-full p-2 mb-6 border-2 rounded-lg bg-white/50 dark:bg-slate-700/50 border-slate-300 dark:border-slate-600 text-center">
+            
+            <section id="focus" class="glass-pane app-section bg-white/60 dark:bg-dark-card/60 backdrop-blur-xl rounded-2xl shadow-xl border border-white/20 dark:border-dark-border p-8 hidden text-center">
+                 <h2 class="text-3xl font-bold mb-5">Focus Mode</h2>
+                <div class="max-w-md mx-auto bg-black/5 dark:bg-black/10 rounded-lg p-6">
+                    <input type="text" id="focus-task-input" placeholder="What is your focus for this session?" class="w-full p-2 mb-6 border-2 rounded-lg bg-white/50 dark:bg-black/20 border-gray-300 dark:border-dark-border text-center focus:ring-2 focus:ring-sky-400 focus:outline-none">
                     <div id="timer-display" class="text-8xl font-bold mb-6">25:00</div>
                     <div id="timer-controls" class="flex justify-center space-x-4">
-                        <button id="start-pause-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-lg text-xl">Start</button>
-                        <button id="reset-btn" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-8 rounded-lg text-xl">Reset</button>
+                        <button id="start-pause-btn" class="bg-sky-500 hover:bg-sky-600 text-white font-bold py-3 px-8 rounded-lg text-xl shadow-md">Start</button>
+                        <button id="reset-btn" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-8 rounded-lg text-xl shadow-md">Reset</button>
                     </div>
                 </div>
                 <div id="break-message" class="hidden mt-6 bg-green-100 dark:bg-green-900 border-l-4 border-green-500 text-green-700 dark:text-green-300 p-4 max-w-md mx-auto rounded-r-lg" role="alert">
@@ -105,16 +107,16 @@
                     <p class="mt-2 text-sm italic">Du'a for focus: "Rabbi zidni ilma" (My Lord, increase me in knowledge).</p>
                 </div>
             </section>
-
-            <section id="challenge" class="app-section bg-white/50 dark:bg-slate-800/50 backdrop-blur-lg rounded-xl shadow-lg border border-white/30 dark:border-slate-700 p-6 hidden">
+            
+             <section id="challenge" class="glass-pane app-section bg-white/60 dark:bg-dark-card/60 backdrop-blur-xl rounded-2xl shadow-xl border border-white/20 dark:border-dark-border p-8 hidden">
                 <h2 class="text-3xl font-bold mb-5 text-center">22-Day Challenge</h2>
                 <div class="max-w-2xl mx-auto">
                     <div id="start-challenge-view" class="hidden text-center">
                         <h3 class="text-xl font-semibold mb-4">Start a New Habit Challenge</h3>
-                        <p class="mb-6">Define a goal you want to commit to for 22 days.</p>
+                        <p class="text-gray-500 dark:text-gray-400 mb-6">Define a goal you want to commit to for 22 days.</p>
                         <form id="start-challenge-form" class="flex flex-col sm:flex-row gap-2">
-                            <input type="text" id="challenge-goal-input" placeholder="e.g., Pray all 5 Salah on time" class="flex-grow p-2 border rounded-lg bg-white/50 dark:bg-slate-700/50 border-slate-300 dark:border-slate-600">
-                            <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg">Start Challenge</button>
+                            <input type="text" id="challenge-goal-input" placeholder="e.g., Pray all 5 Salah on time" class="flex-grow p-2 border rounded-lg bg-white/50 dark:bg-black/20 border-gray-300 dark:border-dark-border focus:ring-2 focus:ring-sky-400 focus:outline-none">
+                            <button type="submit" class="bg-sky-500 hover:bg-sky-600 text-white font-bold py-2 px-4 rounded-lg shadow-md">Start Challenge</button>
                         </form>
                     </div>
                     <div id="active-challenge-view" class="hidden">
@@ -132,134 +134,119 @@
                     </div>
                 </div>
             </section>
-
-            <section id="notes" class="app-section bg-white/50 dark:bg-slate-800/50 backdrop-blur-lg rounded-xl shadow-lg border border-white/30 dark:border-slate-700 p-6 hidden">
-                <div class="relative flex justify-center items-center mb-5">
+            
+            <section id="notes" class="glass-pane app-section bg-white/60 dark:bg-dark-card/60 backdrop-blur-xl rounded-2xl shadow-xl border border-white/20 dark:border-dark-border p-8 hidden">
+                 <div class="relative flex justify-center items-center mb-5">
                     <h2 class="text-3xl font-bold text-center">Notes & Du'a Jar</h2>
-                    <button id="add-note-btn" class="absolute right-0 top-0 text-blue-600 dark:text-blue-400 hover:scale-110 transition-transform duration-300">
+                    <button id="add-note-btn" class="absolute right-0 top-0 text-sky-500 dark:text-sky-400 hover:scale-110 transition-transform duration-300">
                         <ion-icon name="add-circle" class="text-4xl"></ion-icon>
                     </button>
                 </div>
-
                 <div>
-                    <h3 class="text-2xl font-bold mb-4 text-center">Saved Notes</h3>
+                    <h3 class="text-2xl font-bold mb-4 text-center">Your Saved Notes</h3>
                     <div id="notes-filter-bar" class="flex justify-center flex-wrap gap-3 mb-6">
-                        <button data-tag="All" class="filter-btn text-sm font-semibold rounded-full px-4 py-2 transition-all duration-200 backdrop-blur-sm bg-blue-500/80 dark:bg-blue-500/70 border-transparent text-white ring-2 ring-blue-300 dark:ring-blue-400">All</button>
-                        <button data-tag="Thought" class="filter-btn text-sm font-semibold rounded-full px-4 py-2 transition-all duration-200 backdrop-blur-sm bg-black/5 dark:bg-white/10 border border-slate-300/50 dark:border-slate-600/50 text-slate-700 dark:text-slate-300">Thought</button>
-                        <button data-tag="Gratitude" class="filter-btn text-sm font-semibold rounded-full px-4 py-2 transition-all duration-200 backdrop-blur-sm bg-black/5 dark:bg-white/10 border border-slate-300/50 dark:border-slate-600/50 text-slate-700 dark:text-slate-300">Gratitude</button>
-                        <button data-tag="Du'a" class="filter-btn text-sm font-semibold rounded-full px-4 py-2 transition-all duration-200 backdrop-blur-sm bg-black/5 dark:bg-white/10 border border-slate-300/50 dark:border-slate-600/50 text-slate-700 dark:text-slate-300">Du'a</button>
-                        <button data-tag="Stress" class="filter-btn text-sm font-semibold rounded-full px-4 py-2 transition-all duration-200 backdrop-blur-sm bg-black/5 dark:bg-white/10 border border-slate-300/50 dark:border-slate-600/50 text-slate-700 dark:text-slate-300">Stress</button>
+                        <button data-tag="All" class="filter-btn text-sm font-semibold rounded-full px-4 py-2 transition-all duration-200 backdrop-blur-sm bg-sky-500/80 dark:bg-sky-500/70 border-transparent text-white ring-2 ring-sky-300 dark:ring-sky-400">All</button>
+                        <button data-tag="Thought" class="filter-btn text-sm font-semibold rounded-full px-4 py-2 transition-all duration-200 backdrop-blur-sm bg-black/5 dark:bg-white/10 border border-gray-300/50 dark:border-dark-border/50 text-gray-700 dark:text-gray-300">Thought</button>
+                        <button data-tag="Gratitude" class="filter-btn text-sm font-semibold rounded-full px-4 py-2 transition-all duration-200 backdrop-blur-sm bg-black/5 dark:bg-white/10 border border-gray-300/50 dark:border-dark-border/50 text-gray-700 dark:text-gray-300">Gratitude</button>
+                        <button data-tag="Du'a" class="filter-btn text-sm font-semibold rounded-full px-4 py-2 transition-all duration-200 backdrop-blur-sm bg-black/5 dark:bg-white/10 border border-gray-300/50 dark:border-dark-border/50 text-gray-700 dark:text-gray-300">Du'a</button>
+                        <button data-tag="Stress" class="filter-btn text-sm font-semibold rounded-full px-4 py-2 transition-all duration-200 backdrop-blur-sm bg-black/5 dark:bg-white/10 border border-gray-300/50 dark:border-dark-border/50 text-gray-700 dark:text-gray-300">Stress</button>
                     </div>
-                    <div id="notes-list" class="max-w-xl mx-auto space-y-4">
-                        </div>
+                    <div id="notes-list" class="max-w-xl mx-auto space-y-4"></div>
                 </div>
             </section>
 
         </main>
 
-        <nav id="mobile-nav" class="md:hidden fixed bottom-0 inset-x-0 z-50">
-            <div class="mx-4 mb-4">
-                <div class="flex justify-around items-center bg-white/50 dark:bg-slate-800/50 backdrop-blur-lg rounded-xl shadow-lg border border-white/30 dark:border-slate-700 px-2 py-3">
-                    <a href="#" data-target="planner" class="nav-link-mobile flex flex-col items-center justify-center text-slate-600 dark:text-slate-400">
-                        <ion-icon name="today-outline" class="text-2xl"></ion-icon><span class="text-xs font-medium">Planner</span>
-                    </a>
-                    <a href="#" data-target="mood" class="nav-link-mobile flex flex-col items-center justify-center text-slate-600 dark:text-slate-400">
-                        <ion-icon name="happy-outline" class="text-2xl"></ion-icon><span class="text-xs font-medium">Mood</span>
-                    </a>
-                    <a href="#" data-target="focus" class="nav-link-mobile flex flex-col items-center justify-center text-slate-600 dark:text-slate-400">
-                        <ion-icon name="time-outline" class="text-2xl"></ion-icon><span class="text-xs font-medium">Focus</span>
-                    </a>
-                    <a href="#" data-target="challenge" class="nav-link-mobile flex flex-col items-center justify-center text-slate-600 dark:text-slate-400">
-                        <ion-icon name="trophy-outline" class="text-2xl"></ion-icon><span class="text-xs font-medium">Challenge</span>
-                    </a>
-                    <a href="#" data-target="notes" class="nav-link-mobile flex flex-col items-center justify-center text-slate-600 dark:text-slate-400">
-                        <ion-icon name="document-text-outline" class="text-2xl"></ion-icon><span class="text-xs font-medium">Notes</span>
-                    </a>
-                </div>
+        <nav id="mobile-nav" class="md:hidden fixed bottom-4 inset-x-4 z-50">
+            <div class="glass-pane flex justify-around items-center bg-white/60 dark:bg-dark-card/60 backdrop-blur-xl rounded-2xl shadow-xl border border-white/20 dark:border-dark-border px-2 py-3">
+                <a href="#" data-target="planner" class="nav-link-mobile flex flex-col items-center justify-center text-gray-500 dark:text-gray-400">
+                    <ion-icon name="today-outline" class="text-2xl"></ion-icon><span class="text-xs font-medium">Planner</span>
+                </a>
+                <a href="#" data-target="mood" class="nav-link-mobile flex flex-col items-center justify-center text-gray-500 dark:text-gray-400">
+                    <ion-icon name="happy-outline" class="text-2xl"></ion-icon><span class="text-xs font-medium">Mood</span>
+                </a>
+                <a href="#" data-target="focus" class="nav-link-mobile flex flex-col items-center justify-center text-gray-500 dark:text-gray-400">
+                    <ion-icon name="time-outline" class="text-2xl"></ion-icon><span class="text-xs font-medium">Focus</span>
+                </a>
+                <a href="#" data-target="challenge" class="nav-link-mobile flex flex-col items-center justify-center text-gray-500 dark:text-gray-400">
+                    <ion-icon name="trophy-outline" class="text-2xl"></ion-icon><span class="text-xs font-medium">Challenge</span>
+                </a>
+                <a href="#" data-target="notes" class="nav-link-mobile flex flex-col items-center justify-center text-gray-500 dark:text-gray-400">
+                    <ion-icon name="document-text-outline" class="text-2xl"></ion-icon><span class="text-xs font-medium">Notes</span>
+                </a>
             </div>
         </nav>
 
-        <footer class="text-center p-4 text-sm text-slate-600 dark:text-slate-400 mt-8 hidden md:block">
+        <footer class="text-center p-4 text-sm text-gray-500 dark:text-gray-400 mt-8 hidden md:block">
             <p>LifePad+ | Built with 🤍</p>
         </footer>
-    </div>
 
-
-    <div id="add-note-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm hidden">
-        <div class="w-full max-w-xl bg-white/70 dark:bg-slate-800/70 backdrop-blur-lg rounded-xl shadow-lg border border-white/30 dark:border-slate-700 p-6 relative">
-            <button id="close-note-modal-btn" class="absolute top-3 right-3 text-slate-500 dark:text-slate-400 hover:scale-125 transition-transform">
-                <ion-icon name="close-circle" class="text-3xl"></ion-icon>
-            </button>
-
-            <form id="add-note-form">
-                <h3 class="text-2xl font-bold mb-5 text-center">Add New Note</h3>
-                <textarea id="note-textarea" rows="4" class="w-full p-2 border-2 rounded-lg bg-white/50 dark:bg-slate-700/50 border-slate-300 dark:border-slate-600 focus:outline-none focus:border-blue-500" placeholder="Write freely..."></textarea>
-                <div class="mt-4">
-                    <h3 class="font-semibold mb-2">Tag as:</h3>
-                    <div id="note-tags" class="flex flex-wrap gap-3">
-                        <label class="tag-label">
-                            <input type="radio" name="note-tag" value="Thought" class="sr-only" checked>
-                            <span class="inline-block cursor-pointer rounded-full px-4 py-2 text-sm font-semibold transition-all duration-200 backdrop-blur-sm bg-blue-500/80 dark:bg-blue-500/70 border-transparent text-white ring-2 ring-blue-300 dark:ring-blue-400">Thought</span>
-                        </label>
-                        <label class="tag-label">
-                            <input type="radio" name="note-tag" value="Gratitude" class="sr-only">
-                            <span class="inline-block cursor-pointer rounded-full px-4 py-2 text-sm font-semibold transition-all duration-200 backdrop-blur-sm bg-black/5 dark:bg-white/10 border border-slate-300/50 dark:border-slate-600/50 text-slate-700 dark:text-slate-300">Gratitude</span>
-                        </label>
-                        <label class="tag-label">
-                            <input type="radio" name="note-tag" value="Du'a" class="sr-only">
-                            <span class="inline-block cursor-pointer rounded-full px-4 py-2 text-sm font-semibold transition-all duration-200 backdrop-blur-sm bg-black/5 dark:bg-white/10 border border-slate-300/50 dark:border-slate-600/50 text-slate-700 dark:text-slate-300">Du'a</span>
-                        </label>
-                        <label class="tag-label">
-                            <input type="radio" name="note-tag" value="Stress" class="sr-only">
-                            <span class="inline-block cursor-pointer rounded-full px-4 py-2 text-sm font-semibold transition-all duration-200 backdrop-blur-sm bg-black/5 dark:bg-white/10 border border-slate-300/50 dark:border-slate-600/50 text-slate-700 dark:text-slate-300">Stress</span>
-                        </label>
+        <div id="edit-task-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm hidden">
+             <div class="glass-pane w-full max-w-xl bg-white/60 dark:bg-dark-card/60 backdrop-blur-xl rounded-2xl shadow-xl border border-white/20 dark:border-dark-border p-6 relative">
+                 <button id="close-edit-modal-btn" class="absolute top-4 right-4 text-gray-500 dark:text-gray-400 hover:scale-125 transition-transform"><ion-icon name="close-circle" class="text-3xl"></ion-icon></button>
+                 <form id="edit-task-form">
+                     <h3 class="text-2xl font-bold mb-5 text-center">Edit Task</h3>
+                     <input type="text" id="edit-task-input" class="w-full p-3 border rounded-lg bg-white/50 dark:bg-black/20 border-gray-300 dark:border-dark-border focus:ring-2 focus:ring-sky-400 focus:outline-none">
+                     <button type="submit" class="w-full mt-6 bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-lg shadow-md">Save Changes</button>
+                 </form>
+             </div>
+         </div>
+        
+         <div id="add-note-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm hidden">
+            <div class="glass-pane w-full max-w-xl bg-white/60 dark:bg-dark-card/60 backdrop-blur-xl rounded-2xl shadow-xl border border-white/20 dark:border-dark-border p-6 relative">
+                <button id="close-note-modal-btn" class="absolute top-4 right-4 text-gray-500 dark:text-gray-400 hover:scale-125 transition-transform"><ion-icon name="close-circle" class="text-3xl"></ion-icon></button>
+                <form id="add-note-form">
+                    <h3 class="text-2xl font-bold mb-5 text-center">Add New Note</h3>
+                    <textarea id="note-textarea" rows="4" class="w-full p-2 border-2 rounded-lg bg-white/50 dark:bg-black/20 border-gray-300 dark:border-dark-border focus:outline-none focus:border-sky-400" placeholder="Write freely..."></textarea>
+                    <div class="mt-4">
+                        <h3 class="font-semibold mb-2">Tag as:</h3>
+                        <div id="note-tags" class="flex flex-wrap gap-3">
+                            <label class="tag-label"><input type="radio" name="note-tag" value="Thought" class="sr-only" checked><span class="inline-block cursor-pointer rounded-full px-4 py-2 text-sm font-semibold transition-all duration-200 backdrop-blur-sm bg-sky-500/80 dark:bg-sky-500/70 border-transparent text-white ring-2 ring-sky-300 dark:ring-sky-400">Thought</span></label>
+                            <label class="tag-label"><input type="radio" name="note-tag" value="Gratitude" class="sr-only"><span class="inline-block cursor-pointer rounded-full px-4 py-2 text-sm font-semibold transition-all duration-200 backdrop-blur-sm bg-black/5 dark:bg-white/10 border border-gray-300/50 dark:border-dark-border/50 text-gray-700 dark:text-gray-300">Gratitude</span></label>
+                            <label class="tag-label"><input type="radio" name="note-tag" value="Du'a" class="sr-only"><span class="inline-block cursor-pointer rounded-full px-4 py-2 text-sm font-semibold transition-all duration-200 backdrop-blur-sm bg-black/5 dark:bg-white/10 border border-gray-300/50 dark:border-dark-border/50 text-gray-700 dark:text-gray-300">Du'a</span></label>
+                            <label class="tag-label"><input type="radio" name="note-tag" value="Stress" class="sr-only"><span class="inline-block cursor-pointer rounded-full px-4 py-2 text-sm font-semibold transition-all duration-200 backdrop-blur-sm bg-black/5 dark:bg-white/10 border border-gray-300/50 dark:border-dark-border/50 text-gray-700 dark:text-gray-300">Stress</span></label>
+                        </div>
                     </div>
-                </div>
-                <button type="submit" class="w-full mt-6 bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-lg">Save Note</button>
-            </form>
+                    <button type="submit" class="w-full mt-6 bg-sky-500 hover:bg-sky-600 text-white font-bold py-3 px-4 rounded-lg shadow-md">Save Note</button>
+                </form>
+            </div>
         </div>
-    </div>
-
-
-    <div id="edit-task-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm hidden">
-        <div class="w-full max-w-xl bg-white/70 dark:bg-slate-800/70 backdrop-blur-lg rounded-xl shadow-lg border border-white/30 dark:border-slate-700 p-6 relative">
-            <button id="close-edit-modal-btn" class="absolute top-3 right-3 text-slate-500 dark:text-slate-400 hover:scale-125 transition-transform">
-                <ion-icon name="close-circle" class="text-3xl"></ion-icon>
-            </button>
-            <form id="edit-task-form">
-                <h3 class="text-2xl font-bold mb-5 text-center">Edit Task</h3>
-                <input type="text" id="edit-task-input" class="w-full p-3 border rounded-lg bg-white/50 dark:bg-slate-700/50 border-slate-300 dark:border-slate-600 focus:ring-2 focus:ring-blue-400 focus:outline-none">
-                <button type="submit" class="w-full mt-6 bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-lg">Save Changes</button>
-            </form>
-        </div>
-    </div>
-
-    <div id="history-detail-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm hidden">
-        <div class="w-full max-w-2xl bg-white/70 dark:bg-slate-800/70 backdrop-blur-lg rounded-xl shadow-lg border border-white/30 dark:border-slate-700 p-6 relative max-h-[80vh] overflow-y-auto">
-            <button id="close-history-modal-btn" class="absolute top-3 right-3 text-slate-500 dark:text-slate-400 hover:scale-125 transition-transform">
-                <ion-icon name="close-circle" class="text-3xl"></ion-icon>
-            </button>
-
-            <div id="history-modal-content">
-                <p id="history-modal-date" class="text-xs text-slate-500 dark:text-slate-400 font-semibold mb-4"></p>
-                <div class="mb-4">
-                    <p class="font-bold text-slate-700 dark:text-slate-300 text-lg">You said:</p>
-                    <p id="history-modal-user-query" class="pl-2 italic text-lg">"</p>
-                </div>
-                <div>
-                    <p class="font-bold text-slate-700 dark:text-slate-300 text-lg">Yaqeen replied:</p>
-                    <p id="history-modal-ai-response" class="pl-2 whitespace-pre-wrap text-lg"></p>
+        
+        <div id="history-detail-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm hidden">
+            <div class="glass-pane w-full max-w-2xl bg-white/60 dark:bg-dark-card/60 backdrop-blur-xl rounded-2xl shadow-xl border border-white/20 dark:border-dark-border p-6 relative max-h-[80vh] overflow-y-auto">
+                <button id="close-history-modal-btn" class="absolute top-4 right-4 text-gray-500 dark:text-gray-400 hover:scale-125 transition-transform">
+                    <ion-icon name="close-circle" class="text-3xl"></ion-icon>
+                </button>
+                <div id="history-modal-content">
+                    <p id="history-modal-date" class="text-xs text-gray-500 dark:text-gray-400 font-semibold mb-4"></p>
+                    <div class="mb-4">
+                        <p class="font-bold text-lg">You said:</p>
+                        <p id="history-modal-user-query" class="pl-2 italic text-lg"></p>
+                    </div>
+                    <div>
+                        <p class="font-bold text-lg">Yaqeen replied:</p>
+                        <p id="history-modal-ai-response" class="pl-2 whitespace-pre-wrap text-lg"></p>
+                    </div>
                 </div>
             </div>
         </div>
+
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-functions-compat.js"></script>
     
     <script src="firebase-config.js"></script>
     <script type="module" src="js/main.js"></script>
+    <script>
+        // JS for the aurora shine effect
+        document.body.addEventListener('mousemove', (e) => {
+            document.documentElement.style.setProperty('--mouse-x', `${e.clientX}px`);
+            document.documentElement.style.setProperty('--mouse-y', `${e.clientY}px`);
+        });
+    </script>
 
 </body>
 </html>
