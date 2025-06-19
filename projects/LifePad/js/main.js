@@ -1,8 +1,8 @@
 // js/main.js
 
 import { initNavigation, showSection, updateAuthUI } from './ui.js';
-import { initPlanner } from './planner.js';
 import { initMood } from './mood.js';
+import { initPlanner } from './planner.js';
 import { initChallenge } from './challenge.js';
 import { initFocus } from './focus.js';
 import { initTheme } from './theme.js';
@@ -12,9 +12,8 @@ function onReady() {
     // --- Initialize all modules that DON'T depend on the user ---
     initTheme();
     initNavigation();
-    showSection('planner'); // Show the planner by default
+    showSection('mood'); // Show the planner by default
 
-    // --- Listen for auth changes and initialize all modules that DO depend on the user ---
     firebase.auth().onAuthStateChanged(user => {
         updateAuthUI(user); 
         
