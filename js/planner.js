@@ -3,16 +3,19 @@
 // --- DOM Elements ---
 const addTaskForm = document.getElementById('add-task-form');
 const taskInput = document.getElementById('task-input');
+const taskPriorityInput = document.getElementById('task-priority-input'); // New
+const taskCategoryInput = document.getElementById('task-category-input'); // New
 const taskList = document.getElementById('task-list');
 const editTaskModal = document.getElementById('edit-task-modal');
 const closeEditModalBtn = document.getElementById('close-edit-modal-btn');
 const editTaskForm = document.getElementById('edit-task-form');
 const editTaskInput = document.getElementById('edit-task-input');
+const aiTaskSuggestionBtn = document.getElementById('ai-task-suggestion-btn'); // New
 
 // --- State ---
 let user = null;
 let tasksCollection;
-let editingTaskId = null; // To keep track of which task we are editing
+let editingTaskId = null;
 
 // --- Modal Control ---
 function openEditModal(task) {
@@ -30,19 +33,36 @@ function closeEditModal() {
 // --- Core Functions ---
 
 function renderTasks(tasks) {
+    const loader = document.getElementById('planner-loader');
+    if (loader) {
+        loader.style.display = 'none'; // Hide skeleton loader
+    }
+
     taskList.innerHTML = '';
     if (tasks.length === 0) {
         taskList.innerHTML = `<p class="text-center text-gray-500 dark:text-gray-400">No tasks for today. Add one to get started!</p>`;
         return;
     }
+
+    const priorityStyles = {
+        high: 'border-l-red-500',
+        medium: 'border-l-yellow-500',
+        low: 'border-l-green-500'
+    };
+    
     tasks.forEach(task => {
         const taskEl = document.createElement('div');
         const isCompleted = task.completed;
-        taskEl.className = `task-card flex items-center bg-white/60 dark:bg-slate-800/60 p-3 rounded-lg shadow transition-all duration-300 ${isCompleted ? 'opacity-60' : ''}`;
+        const priorityClass = priorityStyles[task.priority] || 'border-l-gray-400';
+        
+        taskEl.className = `task-card flex items-center bg-white/60 dark:bg-slate-800/60 p-3 rounded-lg shadow transition-all duration-300 ${isCompleted ? 'opacity-60' : ''} ${priorityClass} border-l-4 animate-fade-in-down`;
         
         taskEl.innerHTML = `
             <input type="checkbox" data-id="${task.id}" class="task-checkbox form-checkbox h-6 w-6 rounded-full text-green-500 bg-gray-300 dark:bg-slate-700 border-none focus:ring-2 focus:ring-green-400" ${isCompleted ? 'checked' : ''}>
-            <span class="task-text flex-grow mx-4 text-slate-800 dark:text-slate-200 ${isCompleted ? 'line-through' : ''}">${task.text}</span>
+            <div class="flex-grow mx-4">
+                <span class="task-text text-slate-800 dark:text-slate-200 ${isCompleted ? 'line-through' : ''}">${task.text}</span>
+                <div class="text-xs text-gray-500 dark:text-gray-400 font-medium mt-1">${task.category || 'General'}</div>
+            </div>
             <div class="task-controls flex items-center space-x-2">
                 <button data-task='${JSON.stringify(task)}' class="edit-task-btn text-blue-500 hover:text-blue-700"><ion-icon name="create-outline" class="text-xl"></ion-icon></button>
                 <button data-id="${task.id}" class="delete-task-btn text-red-500 hover:text-red-700"><ion-icon name="trash-outline" class="text-xl"></ion-icon></button>
@@ -54,9 +74,14 @@ function renderTasks(tasks) {
 
 async function fetchTasks() {
     if (!tasksCollection) return;
-    tasksCollection.orderBy("createdAt", "desc").onSnapshot(snapshot => {
+    // NOTE: This requires creating a composite index in Firestore for 'priority' (desc) and 'createdAt' (desc).
+    // The link to create it will appear in your browser's console the first time this query runs.
+    tasksCollection.orderBy("priority", "desc").orderBy("createdAt", "desc").onSnapshot(snapshot => {
         const tasks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         renderTasks(tasks);
+    }, error => {
+        console.error("Error fetching tasks: ", error);
+        taskList.innerHTML = `<p class="text-center text-red-500">Could not load tasks. Check Firestore permissions and indexes.</p>`;
     });
 }
 
@@ -66,7 +91,9 @@ async function handleAddTask(e) {
     if (taskText && user) {
         await tasksCollection.add({
             text: taskText,
-            completed: false, // Add the 'completed' field
+            completed: false,
+            priority: taskPriorityInput.value,
+            category: taskCategoryInput.value,
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
         taskInput.value = '';
@@ -79,14 +106,12 @@ async function handleTaskControls(e) {
     const target = e.target.closest('button, input');
     if (!target || !user) return;
 
-    // Handle Checkbox Toggle
     if (target.classList.contains('task-checkbox')) {
         const taskId = target.dataset.id;
         const isCompleted = target.checked;
         await tasksCollection.doc(taskId).update({ completed: isCompleted });
     }
 
-    // Handle Delete Button
     if (target.classList.contains('delete-task-btn')) {
         if (confirm("Are you sure you want to delete this task?")) {
             const taskId = target.dataset.id;
@@ -94,7 +119,6 @@ async function handleTaskControls(e) {
         }
     }
 
-    // Handle Edit Button
     if (target.classList.contains('edit-task-btn')) {
         const taskData = JSON.parse(target.dataset.task);
         openEditModal(taskData);
@@ -110,6 +134,61 @@ async function handleUpdateTask(e) {
     }
 }
 
+// --- AI Feature ---
+async function handleAITaskSuggestion() {
+    if (!user) {
+        alert("Please log in to use AI suggestions.");
+        return;
+    }
+    const goal = prompt("What is your main goal or focus for today?\n(e.g., 'study for my physics exam', 'clean the house', 'work on my new project')");
+    if (!goal || goal.trim() === '') return;
+
+    aiTaskSuggestionBtn.textContent = 'Generating...';
+    aiTaskSuggestionBtn.disabled = true;
+
+    try {
+        // This assumes you create a new Vercel serverless function at this endpoint
+        const response = await fetch('/api/suggest-tasks', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ goal: goal }),
+        });
+
+        if (!response.ok) throw new Error(`API Error: ${response.statusText}`);
+        
+        const suggestions = await response.json(); // Expects an array of strings: ["Task 1", "Task 2"]
+        
+        if (suggestions && suggestions.length > 0) {
+            const confirmMessage = `AI suggested the following tasks:\n\n- ${suggestions.join('\n- ')}\n\nWould you like to add them to your planner?`;
+            if (confirm(confirmMessage)) {
+                const batch = firebase.firestore().batch();
+                suggestions.forEach(taskText => {
+                    const newTaskRef = tasksCollection.doc();
+                    batch.set(newTaskRef, {
+                        text: taskText,
+                        completed: false,
+                        priority: 'medium', // Default priority for AI tasks
+                        category: 'General', // Default category
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                });
+                await batch.commit();
+                alert(`${suggestions.length} tasks have been added.`);
+            }
+        } else {
+            alert("The AI couldn't generate suggestions for that goal. Please try a different one.");
+        }
+
+    } catch (error) {
+        console.error('AI Suggestion Error:', error);
+        alert("Sorry, we couldn't get AI suggestions at the moment. Please try again later.");
+    } finally {
+        aiTaskSuggestionBtn.textContent = 'Stuck? Get AI Task Suggestions';
+        aiTaskSuggestionBtn.disabled = false;
+    }
+}
+
+
 // --- Initialization ---
 export function initPlanner(currentUser) {
     user = currentUser;
@@ -117,14 +196,14 @@ export function initPlanner(currentUser) {
         tasksCollection = firebase.firestore().collection('users').doc(user.uid).collection('tasks');
         fetchTasks();
     } else {
-        renderTasks([]); // Clear tasks on logout
+        renderTasks([]);
     }
     
     if (!addTaskForm.dataset.initialized) {
         addTaskForm.addEventListener('submit', handleAddTask);
         taskList.addEventListener('click', handleTaskControls);
+        aiTaskSuggestionBtn.addEventListener('click', handleAITaskSuggestion);
         
-        // Edit Modal Listeners
         editTaskForm.addEventListener('submit', handleUpdateTask);
         closeEditModalBtn.addEventListener('click', closeEditModal);
         editTaskModal.addEventListener('click', (e) => {

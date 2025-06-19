@@ -8,31 +8,64 @@ const resetBtn = document.getElementById('reset-btn');
 const sessionsList = document.getElementById('sessions-list');
 const totalFocusTimeDisplay = document.getElementById('total-focus-time');
 
+// New DOM elements for customizable durations
+const workDurationInput = document.getElementById('work-duration-input');
+const shortBreakInput = document.getElementById('short-break-input');
+const longBreakInput = document.getElementById('long-break-input');
+
 // Timer State
 let user = null;
 let focusSessionsCollection;
 let timerId = null;
 let isPaused = true;
 
-// Pomodoro settings (in seconds)
-const workDuration = 25 * 60;
-const shortBreakDuration = 5 * 60;
-const longBreakDuration = 15 * 60;
+// Pomodoro settings (in seconds) - will be loaded from localStorage
+let workDuration;
+let shortBreakDuration;
+let longBreakDuration;
 
 // Pomodoro state machine
 let state = {
     mode: 'work', // 'work', 'shortBreak', 'longBreak'
-    timeRemaining: workDuration,
+    timeRemaining: 25 * 60, // Default before settings load
     cycle: 1, // Current work cycle (1-4)
 };
 
 let allSessions = [];
 
+// --- Settings Persistence ---
+function loadSettings() {
+    const savedWork = localStorage.getItem('workDuration') || 25;
+    const savedShort = localStorage.getItem('shortBreakDuration') || 5;
+    const savedLong = localStorage.getItem('longBreakDuration') || 15;
+
+    workDurationInput.value = savedWork;
+    shortBreakInput.value = savedShort;
+    longBreakInput.value = savedLong;
+
+    workDuration = parseInt(savedWork, 10) * 60;
+    shortBreakDuration = parseInt(savedShort, 10) * 60;
+    longBreakDuration = parseInt(savedLong, 10) * 60;
+
+    // If the timer is in its default state, update it with loaded settings
+    if (isPaused && state.mode === 'work' && state.timeRemaining === 25 * 60) {
+        resetTimer();
+    }
+}
+
+function saveSettings() {
+    localStorage.setItem('workDuration', workDurationInput.value);
+    localStorage.setItem('shortBreakDuration', shortBreakInput.value);
+    localStorage.setItem('longBreakDuration', longBreakInput.value);
+    loadSettings(); // Reload settings into the app
+    resetTimer(); // Reset the timer to apply new settings immediately
+    alert("Timer settings saved and timer has been reset.");
+}
+
 // --- Firestore Functions ---
 function fetchSessions() {
     if (!focusSessionsCollection) return;
     
-    // Get sessions from the last 24 hours
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
     
@@ -47,7 +80,7 @@ function fetchSessions() {
 async function saveCompletedSession() {
     if (!user || !focusSessionsCollection) return;
     const session = {
-        duration: workDuration / 60, // in minutes
+        duration: workDuration / 60, // save in minutes
         completedAt: firebase.firestore.FieldValue.serverTimestamp()
     };
     try {
@@ -93,22 +126,19 @@ function transitionState() {
     timerId = null;
 
     if (state.mode === 'work') {
-        saveCompletedSession(); // Save session on completion
+        saveCompletedSession();
         if (state.cycle < 4) {
-            // Transition to short break
             state.mode = 'shortBreak';
             state.timeRemaining = shortBreakDuration;
             timerLabel.textContent = `Short Break (${state.cycle}/4)`;
             state.cycle++;
         } else {
-            // Transition to long break
             state.mode = 'longBreak';
             state.timeRemaining = longBreakDuration;
             timerLabel.textContent = 'Long Break! You earned it!';
-            state.cycle = 1; // Reset for next pomodoro set
+            state.cycle = 1;
         }
-    } else { // 'shortBreak' or 'longBreak'
-        // Transition back to work
+    } else {
         state.mode = 'work';
         state.timeRemaining = workDuration;
         timerLabel.textContent = `Time to Focus! (${state.cycle}/4)`;
@@ -122,6 +152,7 @@ function tick() {
     updateDisplay();
 
     if (state.timeRemaining < 0) {
+        // Add a sound notification here if desired
         transitionState();
     }
 }
@@ -147,7 +178,7 @@ function resetTimer() {
     
     state = {
         mode: 'work',
-        timeRemaining: workDuration,
+        timeRemaining: workDuration, // Reset to the current work duration
         cycle: 1,
     };
     
@@ -159,6 +190,8 @@ function resetTimer() {
 // --- Initialization ---
 export function initFocus(currentUser) {
     user = currentUser;
+    loadSettings(); // Load user settings or defaults
+
     if (user) {
         focusSessionsCollection = firebase.firestore().collection('users').doc(user.uid).collection('focusSessions');
         fetchSessions();
@@ -167,13 +200,18 @@ export function initFocus(currentUser) {
         renderHistory();
     }
 
-    // Ensure event listeners are only added once
     if (!startPauseBtn.dataset.initialized) {
         startPauseBtn.addEventListener('click', startPauseTimer);
         resetBtn.addEventListener('click', resetTimer);
+        
+        // Add event listeners for settings inputs
+        workDurationInput.addEventListener('change', saveSettings);
+        shortBreakInput.addEventListener('change', saveSettings);
+        longBreakInput.addEventListener('change', saveSettings);
+
         startPauseBtn.dataset.initialized = 'true';
     }
     
     // Always update display on init
-    updateDisplay();
+    resetTimer(); // Reset to apply loaded settings
 }

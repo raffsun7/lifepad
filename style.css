@@ -7,14 +7,13 @@ body {
     font-family: 'Inter', sans-serif;
 }
 
-/* Base class for all glass panels */
+/* --- Original Styles (Untouched) --- */
+
 .glass-pane {
     position: relative;
     overflow: hidden;
-    /* The main glass effect is applied via Tailwind classes in the HTML */
 }
 
-/* Custom pseudo-element for the "aurora" shine effect */
 .glass-pane::before {
     content: '';
     position: absolute;
@@ -42,49 +41,39 @@ body {
 }
 
 h1.text-2xl.font-bold.bg-clip-text.text-transparent.bg-gradient-to-r.from-sky-500.to-cyan-500 {
-        background: linear-gradient(90deg, #002531, #006bff);
+    background: linear-gradient(90deg, #002531, #006bff);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 
 .dark h1.text-2xl.font-bold.bg-clip-text.text-transparent.bg-gradient-to-r.from-sky-500.to-cyan-500 {
-        cursor: pointer;
-        background: linear-gradient(90deg, #00e8ff, #0003ff);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+    cursor: pointer;
+    background: linear-gradient(90deg, #00e8ff, #0003ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
 }
 
-/* Style for the active navigation links */
 .nav-link.active-link, .nav-link-mobile.active-link {
-    color: #0284c7; /* Tailwind's sky-600 */
+    color: #0284c7; 
 }
 
 .dark .nav-link.active-link, .dark .nav-link-mobile.active-link {
-    color: #38bdf8; /* Tailwind's sky-400 */
-}
-
-
-/* Simple fade-in animation for sections */
-.app-section {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+    color: #38bdf8;
 }
 
 button.bg-sky-500.hover\:bg-sky-600.text-white.font-bold.py-3.px-6.rounded-lg.transition-all.duration-200.hover\:scale-105.shadow-md {
     background: linear-gradient(145deg, #006bff 0%, #00c0ff 100%);
 }
 
-h2.text-3xl.font-bold.mb-6.text-center {
+h2.text-3xl.font-bold.mb-6.text-center, 
+h2.text-3xl.font-bold.text-center {
     background: linear-gradient(to right, #00eaff, #0011ff);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 
-.dark h2.text-3xl.font-bold.mb-6.text-center {
+.dark h2.text-3xl.font-bold.mb-6.text-center,
+.dark h2.text-3xl.font-bold.text-center {
     background: linear-gradient(to right, #cce6ff, #88bfff);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -108,16 +97,59 @@ h2.text-2xl.font-bold.text-center {
     -webkit-text-fill-color: transparent;
 }
 
-h2.text-3xl.font-bold.text-center {
-    background: linear-gradient(90deg, #000000, #0076ff);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+/* --- New Styles --- */
+
+/* Animations */
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
-.dark h2.text-3xl.font-bold.text-center {
-    background: linear-gradient(to right, #cce6ff, #0076ff);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+.animate-fade-in-down {
+    animation: fadeInDown 0.4s ease-out forwards;
+}
+
+/* Prose / Rich Text Styling (for Quill.js content) */
+.prose p {
+    margin-bottom: 1rem;
+}
+.prose strong {
+    font-weight: 600;
+}
+.prose em {
+    font-style: italic;
+}
+.prose ul, .prose ol {
+    padding-left: 1.5rem;
+    margin-bottom: 1rem;
+}
+.prose ul {
+    list-style-type: disc;
+}
+.prose ol {
+    list-style-type: decimal;
+}
+.prose li {
+    margin-bottom: 0.5rem;
+}
+
+/* Prose styles for dark mode */
+.dark .prose {
+    color: #d4d4d4; /* dark-text */
+}
+.dark .prose strong {
+    color: #ffffff;
+}
+
+/* General Component Styling */
+input, select, textarea, .note-editor {
+    transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 /* Accordion icon transition */
@@ -125,6 +157,7 @@ h2.text-3xl.font-bold.text-center {
     transition: transform 0.3s ease;
 }
 
-.note-card[aria-expanded="true"] .accordion-toggle-icon {
+.note-card[aria-expanded="true"] .accordion-toggle-icon,
+.challenge-item[aria-expanded="true"] .accordion-toggle-icon {
     transform: rotate(180deg);
 }

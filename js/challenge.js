@@ -27,6 +27,12 @@ function closeChallengeModal() {
 
 // --- Core Functions ---
 function renderChallenges() {
+    // Hide the skeleton loader now that content is ready
+    const loader = document.getElementById('challenge-loader');
+    if (loader) {
+        loader.style.display = 'none';
+    }
+
     challengeList.innerHTML = '';
     if (!user) {
         challengeList.innerHTML = `<p class="text-center text-gray-500 dark:text-gray-400">Please log in to manage your challenges.</p>`;
@@ -43,7 +49,8 @@ function renderChallenges() {
         const progress = Math.round((completedDays / totalDays) * 100);
 
         const challengeEl = document.createElement('div');
-        challengeEl.className = 'challenge-item bg-white/50 dark:bg-slate-800/50 rounded-lg shadow-md overflow-hidden';
+        // Added animation class for consistency
+        challengeEl.className = 'challenge-item bg-white/50 dark:bg-slate-800/50 rounded-lg shadow-md overflow-hidden animate-fade-in-down';
         challengeEl.dataset.id = challenge.id;
         challengeEl.setAttribute('aria-expanded', 'false');
 
@@ -54,7 +61,10 @@ function renderChallenges() {
                         <h3 class="text-xl font-bold text-gray-800 dark:text-gray-200">${challenge.goal}</h3>
                         <p class="text-sm text-gray-600 dark:text-gray-400">${completedDays} / ${totalDays} days completed</p>
                     </div>
-                    <button class="delete-challenge-btn text-red-500 hover:text-red-700 p-1 z-10"><ion-icon name="trash-outline" class="text-xl"></ion-icon></button>
+                     <div class="flex items-center space-x-2">
+                        <button class="delete-challenge-btn text-red-500 hover:text-red-700 p-1 z-10"><ion-icon name="trash-outline" class="text-xl"></ion-icon></button>
+                        <ion-icon name="chevron-down-outline" class="accordion-toggle-icon text-2xl text-gray-500 dark:text-gray-400"></ion-icon>
+                    </div>
                 </div>
                 <div class="w-full bg-gray-200 rounded-full dark:bg-gray-700 mt-3">
                     <div class="bg-green-500 text-xs font-medium text-blue-100 text-center p-0.5 leading-none rounded-full" style="width: ${progress}%">${progress}%</div>
@@ -140,7 +150,6 @@ async function handleDayCheckboxChange(e, challengeId) {
             });
         } catch (error) {
             console.error("Error updating challenge day: ", error);
-            // Revert checkbox on failure
             e.target.checked = !isChecked;
             alert("Could not update progress. Please check your connection.");
         }
@@ -154,6 +163,7 @@ function handleChallengeClick(e) {
     const challengeId = challengeItem.dataset.id;
 
     if (e.target.closest('.delete-challenge-btn')) {
+        e.stopPropagation(); // Prevent accordion from toggling when deleting
         handleDeleteChallenge(challengeId);
         return;
     }
@@ -163,7 +173,6 @@ function handleChallengeClick(e) {
         return;
     }
     
-    // Accordion toggle logic
     if (e.target.closest('.challenge-header')) {
         const content = challengeItem.querySelector('.challenge-content');
         const isExpanded = challengeItem.getAttribute('aria-expanded') === 'true';

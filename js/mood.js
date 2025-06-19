@@ -1,4 +1,4 @@
-// js/mood.js - Final Vercel-Secured Version
+// js/mood.js
 
 // --- DOM Elements ---
 const aiMoodForm = document.getElementById('ai-mood-form');
@@ -45,10 +45,15 @@ async function handleGetAIResponse(e) {
     e.preventDefault();
     const userInput = moodInput.value.trim();
 
-    if (!userInput || !user) {
-        alert('Please write something and ensure you are logged in.');
+    if (!userInput) {
+        alert('Please write something to share how you are feeling.');
         return;
     }
+     if (!user) {
+        alert('Please log in to talk with Sarah.');
+        return;
+    }
+
 
     aiResponseArea.classList.remove('hidden');
     aiResponseContent.classList.add('hidden');
@@ -93,7 +98,12 @@ async function saveConversation(userInput, aiResponse) {
     }
 }
 
-function renderHistory(historyItems) { //
+function renderHistory(historyItems) {
+    const loader = document.getElementById('mood-history-loader');
+    if (loader) {
+        loader.style.display = 'none';
+    }
+
     pastChatsList.innerHTML = '';
     if (historyItems.length === 0) {
         pastChatsList.innerHTML = `<p class="text-center text-xs text-slate-500 dark:text-slate-400">Your saved chats will appear here.</p>`;
@@ -102,13 +112,12 @@ function renderHistory(historyItems) { //
     historyItems.forEach((item) => {
         const historyEl = document.createElement('div');
         historyEl.className =
-            'history-item flex items-center justify-between w-full text-left bg-black/5 dark:bg-black/20 p-2 rounded-lg';
+            'history-item flex items-center justify-between w-full text-left bg-black/5 dark:bg-black/20 p-2 rounded-lg animate-fade-in-down';
 
         const clickableArea = document.createElement('div');
-        clickableArea.className = 'history-item-btn flex-grow cursor-pointer pr-2 min-w-0'; // Added min-w-0 to help flexbox truncate
+        clickableArea.className = 'history-item-btn flex-grow cursor-pointer pr-2 min-w-0';
         clickableArea.dataset.historyItem = JSON.stringify(item);
         
-        // Truncate the text if it's too long
         const query = item.userQuery;
         const truncatedQuery = query.length > 35 ? query.substring(0, 35) + '.....' : query;
         

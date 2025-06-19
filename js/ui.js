@@ -31,7 +31,8 @@ function handleNavClick(e) {
     e.preventDefault();
     const targetLink = e.target.closest('[data-target]');
     if (targetLink) {
-        showSection(targetLink.dataset.target);
+        const sectionId = targetLink.dataset.target;
+        showSection(sectionId);
     }
 }
 
