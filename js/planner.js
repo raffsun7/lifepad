@@ -1,51 +1,31 @@
 // js/planner.js
 
-// --- DOM Elements ---
-const addTaskForm = document.getElementById('add-task-form');
-const taskInput = document.getElementById('task-input');
-const taskPriorityInput = document.getElementById('task-priority-input');
-const taskCategoryInput = document.getElementById('task-category-input');
-const taskList = document.getElementById('task-list');
-
-// Edit Task Modal
-const editTaskModal = document.getElementById('edit-task-modal');
-const closeEditModalBtn = document.getElementById('close-edit-modal-btn');
-const editTaskForm = document.getElementById('edit-task-form');
-const editTaskInput = document.getElementById('edit-task-input');
-
-// AI Suggestion Modal Elements
-const aiTaskSuggestionBtn = document.getElementById('ai-task-suggestion-btn');
-const aiSuggestionModal = document.getElementById('ai-suggestion-modal');
-const closeAiModalBtn = document.getElementById('close-ai-modal-btn');
-const aiSuggestionForm = document.getElementById('ai-suggestion-form');
-const aiGoalInput = document.getElementById('ai-goal-input');
-
-
 // --- State ---
+// DOM Elements are no longer declared here.
 let user = null;
 let tasksCollection;
 let editingTaskId = null;
-let unsubscribeTasks = null; // To manage Firestore listener
+let unsubscribeTasks = null;
 
 // --- Modal Control ---
-function openEditModal(task) {
+function openEditModal(task, editTaskInput, editTaskModal) {
     editingTaskId = task.id;
     editTaskInput.value = task.text;
     editTaskModal.classList.remove('hidden');
     editTaskInput.focus();
 }
 
-function closeEditModal() {
+function closeEditModal(editTaskModal) {
     editingTaskId = null;
     editTaskModal.classList.add('hidden');
 }
 
-function openAiModal() {
+function openAiModal(aiSuggestionModal, aiGoalInput) {
     aiSuggestionModal.classList.remove('hidden');
     aiGoalInput.focus();
 }
 
-function closeAiModal() {
+function closeAiModal(aiSuggestionModal, aiSuggestionForm) {
     aiSuggestionModal.classList.add('hidden');
     aiSuggestionForm.reset();
 }
@@ -54,6 +34,7 @@ function closeAiModal() {
 // --- Core Functions ---
 
 function renderTasks(tasks) {
+    const taskList = document.getElementById('task-list');
     const loader = document.getElementById('planner-loader');
     if (loader) {
         loader.style.display = 'none';
@@ -97,7 +78,7 @@ function fetchTasks() {
     if (!tasksCollection) return;
     
     if (unsubscribeTasks) {
-        unsubscribeTasks(); // Unsubscribe from previous listener
+        unsubscribeTasks();
     }
 
     unsubscribeTasks = tasksCollection.orderBy("priority", "desc").orderBy("createdAt", "desc").onSnapshot(snapshot => {
@@ -105,13 +86,18 @@ function fetchTasks() {
         renderTasks(tasks);
     }, error => {
         console.error("Error fetching tasks: ", error);
+        const taskList = document.getElementById('task-list');
         taskList.innerHTML = `<p class="text-center text-red-500">Could not load tasks. Check Firestore permissions and indexes.</p>`;
     });
 }
 
 async function handleAddTask(e) {
     e.preventDefault();
+    const taskInput = document.getElementById('task-input');
+    const taskPriorityInput = document.getElementById('task-priority-input');
+    const taskCategoryInput = document.getElementById('task-category-input');
     const taskText = taskInput.value.trim();
+
     if (taskText && user) {
         await tasksCollection.add({
             text: taskText,
@@ -129,6 +115,9 @@ async function handleAddTask(e) {
 async function handleTaskControls(e) {
     const target = e.target.closest('button, input');
     if (!target || !user) return;
+
+    const editTaskModal = document.getElementById('edit-task-modal');
+    const editTaskInput = document.getElementById('edit-task-input');
 
     if (target.classList.contains('task-checkbox')) {
         const taskId = target.dataset.id;
@@ -149,16 +138,18 @@ async function handleTaskControls(e) {
 
     if (target.classList.contains('edit-task-btn')) {
         const taskData = JSON.parse(target.dataset.task);
-        openEditModal(taskData);
+        openEditModal(taskData, editTaskInput, editTaskModal);
     }
 }
 
 async function handleUpdateTask(e) {
     e.preventDefault();
+    const editTaskInput = document.getElementById('edit-task-input');
+    const editTaskModal = document.getElementById('edit-task-modal');
     const newText = editTaskInput.value.trim();
     if (newText && editingTaskId && user) {
         await tasksCollection.doc(editingTaskId).update({ text: newText });
-        closeEditModal();
+        closeEditModal(editTaskModal);
     }
 }
 
@@ -169,6 +160,9 @@ async function handleAITaskSuggestion(e) {
         return;
     }
     
+    const aiSuggestionForm = document.getElementById('ai-suggestion-form');
+    const aiGoalInput = document.getElementById('ai-goal-input');
+    const aiSuggestionModal = document.getElementById('ai-suggestion-modal');
     const goal = aiGoalInput.value.trim();
     if (!goal) return;
 
@@ -188,7 +182,7 @@ async function handleAITaskSuggestion(e) {
         const suggestions = await response.json();
         
         if (suggestions && suggestions.length > 0) {
-            closeAiModal();
+            closeAiModal(aiSuggestionModal, aiSuggestionForm);
             const confirmMessage = `AI suggested the following tasks:\n\n- ${suggestions.join('\n- ')}\n\nWould you like to add them?`;
             if (confirm(confirmMessage)) {
                 const batch = firebase.firestore().batch();
@@ -226,26 +220,46 @@ export function initPlanner(currentUser) {
         fetchTasks();
     } else {
         if (unsubscribeTasks) unsubscribeTasks();
-        renderTasks([]);
+        const taskList = document.getElementById('task-list');
+        if(taskList) renderTasks([]);
     }
     
-    if (!addTaskForm.dataset.initialized) {
-        addTaskForm.addEventListener('submit', handleAddTask);
-        taskList.addEventListener('click', handleTaskControls);
-        
-        editTaskForm.addEventListener('submit', handleUpdateTask);
-        closeEditModalBtn.addEventListener('click', closeEditModal);
-        editTaskModal.addEventListener('click', (e) => {
-            if (e.target === editTaskModal) closeEditModal();
-        });
-
-        aiTaskSuggestionBtn.addEventListener('click', openAiModal);
-        aiSuggestionForm.addEventListener('submit', handleAITaskSuggestion);
-        closeAiModalBtn.addEventListener('click', closeAiModal);
-        aiSuggestionModal.addEventListener('click', (e) => {
-            if (e.target === aiSuggestionModal) closeAiModal();
-        });
-
-        addTaskForm.dataset.initialized = 'true';
+    const addTaskForm = document.getElementById('add-task-form');
+    if (!addTaskForm || addTaskForm.dataset.initialized) {
+        return; // Exit if elements not found or already initialized
     }
+    
+    // --- UPDATED: All element selections are now inside initPlanner ---
+    const taskList = document.getElementById('task-list');
+    
+    // Edit Task Modal
+    const editTaskModal = document.getElementById('edit-task-modal');
+    const closeEditModalBtn = document.getElementById('close-edit-modal-btn');
+    const editTaskForm = document.getElementById('edit-task-form');
+    
+    // AI Suggestion Modal Elements
+    const aiTaskSuggestionBtn = document.getElementById('ai-task-suggestion-btn');
+    const aiSuggestionModal = document.getElementById('ai-suggestion-modal');
+    const closeAiModalBtn = document.getElementById('close-ai-modal-btn');
+    const aiSuggestionForm = document.getElementById('ai-suggestion-form');
+    const aiGoalInput = document.getElementById('ai-goal-input');
+
+    // Add event listeners only if the elements exist
+    addTaskForm.addEventListener('submit', handleAddTask);
+    taskList.addEventListener('click', handleTaskControls);
+    
+    editTaskForm.addEventListener('submit', handleUpdateTask);
+    closeEditModalBtn.addEventListener('click', () => closeEditModal(editTaskModal));
+    editTaskModal.addEventListener('click', (e) => {
+        if (e.target === editTaskModal) closeEditModal(editTaskModal);
+    });
+
+    aiTaskSuggestionBtn.addEventListener('click', () => openAiModal(aiSuggestionModal, aiGoalInput));
+    aiSuggestionForm.addEventListener('submit', handleAITaskSuggestion);
+    closeAiModalBtn.addEventListener('click', () => closeAiModal(aiSuggestionModal, aiSuggestionForm));
+    aiSuggestionModal.addEventListener('click', (e) => {
+        if (e.target === aiSuggestionModal) closeAiModal(aiSuggestionModal, aiSuggestionForm);
+    });
+
+    addTaskForm.dataset.initialized = 'true';
 }
