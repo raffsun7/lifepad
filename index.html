@@ -316,6 +316,20 @@
 
     </div>
 
+    <div id="ai-suggestion-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm hidden">
+        <div class="glass-pane w-full max-w-xl bg-white/60 dark:bg-dark-card/60 backdrop-blur-xl rounded-2xl shadow-xl border border-white/20 dark:border-dark-border p-6 relative">
+            <button id="close-ai-modal-btn" class="absolute top-4 right-4 text-gray-500 dark:text-gray-400 hover:scale-125 transition-transform"><ion-icon name="close-circle" class="text-3xl"></ion-icon></button>
+            <form id="ai-suggestion-form">
+                <h3 class="text-2xl font-bold mb-5 text-center">Get AI Task Suggestions</h3>
+                <div class="mb-4">
+                    <label for="ai-goal-input" class="block font-semibold mb-2 text-center">What is your main goal or focus for today?</label>
+                    <input type="text" id="ai-goal-input" class="w-full p-3 border-2 rounded-lg bg-white/50 dark:bg-black/20 border-gray-300 dark:border-dark-border focus:outline-none focus:border-sky-400" placeholder="e.g., 'Study for my physics exam'" required>
+                </div>
+                <button type="submit" class="w-full mt-6 bg-sky-500 hover:bg-sky-600 text-white font-bold py-3 px-4 rounded-lg shadow-md">Get Suggestions</button>
+            </form>
+        </div>
+    </div>
+
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore-compat.js"></script>

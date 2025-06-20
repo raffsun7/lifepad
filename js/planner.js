@@ -1,7 +1,6 @@
-// js/planner.js
+// js/planner.js --- FINAL VERSION
 
 // --- State ---
-// DOM Elements are no longer declared here.
 let user = null;
 let tasksCollection;
 let editingTaskId = null;
@@ -32,7 +31,6 @@ function closeAiModal(aiSuggestionModal, aiSuggestionForm) {
 
 
 // --- Core Functions ---
-
 function renderTasks(tasks) {
     const taskList = document.getElementById('task-list');
     const loader = document.getElementById('planner-loader');
@@ -46,11 +44,7 @@ function renderTasks(tasks) {
         return;
     }
 
-    const priorityStyles = {
-        high: 'border-l-red-500',
-        medium: 'border-l-yellow-500',
-        low: 'border-l-green-500'
-    };
+    const priorityStyles = { high: 'border-l-red-500', medium: 'border-l-yellow-500', low: 'border-l-green-500' };
     
     tasks.forEach(task => {
         const taskEl = document.createElement('div');
@@ -76,10 +70,7 @@ function renderTasks(tasks) {
 
 function fetchTasks() {
     if (!tasksCollection) return;
-    
-    if (unsubscribeTasks) {
-        unsubscribeTasks();
-    }
+    if (unsubscribeTasks) unsubscribeTasks();
 
     unsubscribeTasks = tasksCollection.orderBy("priority", "desc").orderBy("createdAt", "desc").onSnapshot(snapshot => {
         const tasks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -87,7 +78,7 @@ function fetchTasks() {
     }, error => {
         console.error("Error fetching tasks: ", error);
         const taskList = document.getElementById('task-list');
-        taskList.innerHTML = `<p class="text-center text-red-500">Could not load tasks. Check Firestore permissions and indexes.</p>`;
+        taskList.innerHTML = `<p class="text-center text-red-500">Could not load tasks.</p>`;
     });
 }
 
@@ -99,13 +90,7 @@ async function handleAddTask(e) {
     const taskText = taskInput.value.trim();
 
     if (taskText && user) {
-        await tasksCollection.add({
-            text: taskText,
-            completed: false,
-            priority: taskPriorityInput.value,
-            category: taskCategoryInput.value,
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
+        await tasksCollection.add({ text: taskText, completed: false, priority: taskPriorityInput.value, category: taskCategoryInput.value, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
         taskInput.value = '';
     } else if (!user) {
         alert("Please log in to save tasks.");
@@ -123,10 +108,7 @@ async function handleTaskControls(e) {
         const taskId = target.dataset.id;
         const isCompleted = target.checked;
         await tasksCollection.doc(taskId).update({ completed: isCompleted });
-
-        if (isCompleted && 'vibrate' in navigator) {
-            navigator.vibrate(50);
-        }
+        if (isCompleted && 'vibrate' in navigator) navigator.vibrate(50);
     }
 
     if (target.classList.contains('delete-task-btn')) {
@@ -155,10 +137,7 @@ async function handleUpdateTask(e) {
 
 async function handleAITaskSuggestion(e) {
     e.preventDefault();
-    if (!user) {
-        alert("Please log in to use AI suggestions.");
-        return;
-    }
+    if (!user) { alert("Please log in to use AI suggestions."); return; }
     
     const aiSuggestionForm = document.getElementById('ai-suggestion-form');
     const aiGoalInput = document.getElementById('ai-goal-input');
@@ -171,14 +150,8 @@ async function handleAITaskSuggestion(e) {
     submitButton.disabled = true;
 
     try {
-        const response = await fetch('/api/suggest-tasks', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ goal: goal }),
-        });
-
+        const response = await fetch('/api/suggest-tasks', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ goal: goal }) });
         if (!response.ok) throw new Error(`API Error: ${response.statusText}`);
-        
         const suggestions = await response.json();
         
         if (suggestions && suggestions.length > 0) {
@@ -188,23 +161,17 @@ async function handleAITaskSuggestion(e) {
                 const batch = firebase.firestore().batch();
                 suggestions.forEach(taskText => {
                     const newTaskRef = tasksCollection.doc();
-                    batch.set(newTaskRef, {
-                        text: taskText,
-                        completed: false,
-                        priority: 'medium',
-                        category: 'General',
-                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                    });
+                    batch.set(newTaskRef, { text: taskText, completed: false, priority: 'medium', category: 'General', createdAt: firebase.firestore.FieldValue.serverTimestamp() });
                 });
                 await batch.commit();
             }
         } else {
-            alert("The AI couldn't generate suggestions for that goal. Please try a different one.");
+            alert("The AI couldn't generate suggestions for that goal.");
         }
 
     } catch (error) {
         console.error('AI Suggestion Error:', error);
-        alert("Sorry, we couldn't get AI suggestions at the moment. Please try again later.");
+        alert("Sorry, we couldn't get AI suggestions at the moment.");
     } finally {
         submitButton.textContent = 'Get Suggestions';
         submitButton.disabled = false;
@@ -226,25 +193,20 @@ export function initPlanner(currentUser) {
     
     const addTaskForm = document.getElementById('add-task-form');
     if (!addTaskForm || addTaskForm.dataset.initialized) {
-        return; // Exit if elements not found or already initialized
+        return; 
     }
     
-    // --- UPDATED: All element selections are now inside initPlanner ---
     const taskList = document.getElementById('task-list');
-    
-    // Edit Task Modal
     const editTaskModal = document.getElementById('edit-task-modal');
     const closeEditModalBtn = document.getElementById('close-edit-modal-btn');
     const editTaskForm = document.getElementById('edit-task-form');
     
-    // AI Suggestion Modal Elements
     const aiTaskSuggestionBtn = document.getElementById('ai-task-suggestion-btn');
     const aiSuggestionModal = document.getElementById('ai-suggestion-modal');
     const closeAiModalBtn = document.getElementById('close-ai-modal-btn');
     const aiSuggestionForm = document.getElementById('ai-suggestion-form');
     const aiGoalInput = document.getElementById('ai-goal-input');
 
-    // Add event listeners only if the elements exist
     addTaskForm.addEventListener('submit', handleAddTask);
     taskList.addEventListener('click', handleTaskControls);
     
