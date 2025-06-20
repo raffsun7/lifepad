@@ -1,26 +1,37 @@
-// api/suggest-tasks.js
+// api/suggest-tasks.js -- FINAL, MORE ROBUST VERSION
 
-// This is a Vercel serverless function that acts as a secure proxy to the Groq API.
 export default async function handler(req, res) {
-  // Ensure this function only handles POST requests.
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  // Securely get the Groq API key from environment variables.
   const GROQ_API_KEY = process.env.GROQ_API_KEY;
   if (!GROQ_API_KEY) {
     return res.status(500).json({ error: "GROQ_API_KEY is not configured." });
   }
 
   const { goal } = req.body;
-
-  // Validate that a goal was provided in the request.
   if (!goal) {
     return res.status(400).json({ error: "User goal is required." });
   }
 
-  const prompt = `You are an expert productivity assistant...`; // The prompt remains the same
+  // --- UPDATED AND IMPROVED PROMPT ---
+  const prompt = `You are an expert productivity assistant. Your sole purpose is to take a user's goal and break it down into 3-5 simple, actionable tasks.
+
+User's goal: "${goal}"
+
+IMPORTANT INSTRUCTIONS:
+1. Your response MUST be a valid JSON array of strings.
+2. Each string in the array should be a single, concise task.
+3. Do NOT include any introductory text, explanations, or markdown formatting like \`\`\`json.
+4. Your entire response should be nothing but the JSON array itself, starting with '[' and ending with ']'.
+5. If you cannot generate relevant tasks for the given goal for any reason, you MUST respond with an empty JSON array: []. Do NOT respond with an explanation or any other text.
+
+Example of a good response:
+["Review chapter 3 notes", "Complete 10 practice problems", "Create flashcards for key terms", "Schedule a 30-minute study break"]
+
+Example of a good response for an impossible goal:
+[]`;
 
   try {
     const groqRes = await fetch("https://api.groq.com/openai/v1/chat/completions", {
@@ -31,7 +42,9 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify({
         model: "llama3-8b-8192",
-        messages: [{ role: "system", content: prompt }],
+        messages: [
+          { role: "system", content: prompt }
+        ],
         temperature: 0.5, 
       })
     });
@@ -45,19 +58,13 @@ export default async function handler(req, res) {
     const data = await groqRes.json();
     const aiResponseText = data.choices[0].message.content;
 
-    // --- UPDATED: More robust JSON parsing ---
+    // The robust parsing logic from before
     try {
-      // First, try to parse the whole response directly.
       const suggestedTasks = JSON.parse(aiResponseText);
       res.status(200).json(suggestedTasks);
     } catch (directParseError) {
-      // If direct parsing fails, try to find a JSON array within the string.
       console.warn("Direct JSON parsing failed. Attempting to extract from string.");
-      console.log("Original AI Response:", aiResponseText);
-
-      // This regex looks for a string that starts with [ and ends with ]
       const jsonMatch = aiResponseText.match(/\[.*\]/s);
-
       if (jsonMatch && jsonMatch[0]) {
         try {
           const extractedTasks = JSON.parse(jsonMatch[0]);
