@@ -7,7 +7,7 @@ body {
     font-family: 'Inter', sans-serif;
 }
 
-/* --- Original Styles (Untouched) --- */
+/* --- Original Styles --- */
 
 .glass-pane {
     position: relative;
@@ -97,8 +97,6 @@ h2.text-2xl.font-bold.text-center {
     -webkit-text-fill-color: transparent;
 }
 
-/* --- New Styles --- */
-
 /* Animations */
 @keyframes fadeInDown {
     from {
@@ -160,4 +158,55 @@ input, select, textarea, .note-editor {
 .note-card[aria-expanded="true"] .accordion-toggle-icon,
 .challenge-item[aria-expanded="true"] .accordion-toggle-icon {
     transform: rotate(180deg);
+}
+
+/* --- Added: Mobile-First & Responsiveness Fixes --- */
+
+/* Prevent iOS from zooming on input focus */
+input, textarea, select {
+  font-size: 16px !important; /* Use !important to override other styles if needed */
+  touch-action: manipulation; /* Disable double-tap to zoom */
+}
+
+/* Remove tap highlight on iOS */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Use safe viewport height for full-screen sections on mobile */
+#mood {
+  height: 90vh; /* Fallback for older browsers */
+  height: 90svh; /* Uses "safe" small viewport height, avoiding notches/dynamic toolbars */
+}
+
+/* Ensure long text in tasks and notes doesn't break layout */
+.task-text, .note-header h4 {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0; /* Important for flexbox truncation */
+}
+
+/* Larger, more touch-friendly tap targets for controls */
+.task-checkbox {
+  /* The visible checkbox */
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0; /* Prevent checkbox from shrinking */
+}
+
+/* Give buttons a minimum touch area without changing their visual size */
+.edit-task-btn, .delete-task-btn, .delete-challenge-btn, .delete-note-btn, #theme-toggle-btn {
+  min-width: 48px;
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Improve card appearance on mobile */
+.task-card, .challenge-item, .note-card {
+  margin-top: 8px;
+  margin-bottom: 8px;
+  border-radius: 12px; /* Larger radius for a modern feel */
 }

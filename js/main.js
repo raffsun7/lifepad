@@ -63,6 +63,28 @@ function setupLazyLoader() {
 }
 
 /**
+ * --- Added: Helper function to show a simple toast notification ---
+ * @param {string} message The message to display in the toast.
+ * @param {string} type 'success' for green, 'error' for red/default.
+ */
+function showToast(message, type = 'error') {
+    const toast = document.createElement('div');
+    const toastId = `toast-${Date.now()}`;
+    toast.id = toastId;
+    toast.className = `fixed bottom-24 md:bottom-5 left-1/2 -translate-x-1/2 p-4 rounded-lg shadow-lg text-white text-center z-50 transition-all duration-300 animate-fade-in-down ${type === 'success' ? 'bg-green-600' : 'bg-red-600'}`;
+    toast.textContent = message;
+    
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+        const activeToast = document.getElementById(toastId);
+        if (activeToast) {
+            activeToast.remove();
+        }
+    }, 4000); // Toast disappears after 4 seconds
+}
+
+/**
  * The main function that runs when the DOM is ready.
  */
 function onReady() {
@@ -82,6 +104,15 @@ function onReady() {
 
         // --- Set up lazy loading for all other sections ---
         setupLazyLoader();
+    });
+
+    // --- Added: Global listeners for online/offline status ---
+    window.addEventListener('offline', () => {
+        showToast("You're offline. Changes will sync when you're back.");
+    });
+
+    window.addEventListener('online', () => {
+        showToast("You're back online!", 'success');
     });
 }
 

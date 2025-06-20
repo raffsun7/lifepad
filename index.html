@@ -2,9 +2,17 @@
 <html lang="en" class="light">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>LifePad+ | Smart Daily Planner</title>
     
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#006bff">
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="files/logo-192.png">
+    <link rel="apple-touch-startup-image" href="files/splash.png">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
@@ -12,12 +20,11 @@
         theme: {
             extend: {
                 colors: {
-                    // Custom colors for our new black theme
                     'dark-bg': '#0a0a0a',
                     'dark-card': '#1a1a1a',
                     'dark-border': 'rgba(255, 255, 255, 0.1)',
                     'dark-text': '#d4d4d4',
-                    'dark-accent': '#2dd4bf', // Teal accent
+                    'dark-accent': '#2dd4bf', 
                 }
             }
         }
@@ -33,12 +40,13 @@
     <link rel="stylesheet" href="style.css">
 
     <link rel="icon" href="files/logo.svg" type="image/x-icon">
-    <link rel="icon" href="files/logo.svg" type="image/png">
-    <link rel="icon" sizes="192x192" href="files/logo.svg" type="image/x-icon">
+    <link rel="icon" sizes="192x192" href="files/logo-192.png"> 
     
     <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
     <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
 </head>
+
+
 <body class="bg-gray-100 dark:bg-dark-bg text-gray-800 dark:text-dark-text font-sans transition-colors duration-300">
     
     <div id="app" class="min-h-screen flex flex-col pb-24 md:pb-0">

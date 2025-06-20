@@ -8,7 +8,6 @@ const resetBtn = document.getElementById('reset-btn');
 const sessionsList = document.getElementById('sessions-list');
 const totalFocusTimeDisplay = document.getElementById('total-focus-time');
 
-// New DOM elements for customizable durations
 const workDurationInput = document.getElementById('work-duration-input');
 const shortBreakInput = document.getElementById('short-break-input');
 const longBreakInput = document.getElementById('long-break-input');
@@ -16,60 +15,95 @@ const longBreakInput = document.getElementById('long-break-input');
 // Timer State
 let user = null;
 let focusSessionsCollection;
+let settingsCollection; // --- Added: For Firestore settings
 let timerId = null;
 let isPaused = true;
+let unsubscribeFocus = null; // --- Added: To manage listener
 
-// Pomodoro settings (in seconds) - will be loaded from localStorage
-let workDuration;
-let shortBreakDuration;
-let longBreakDuration;
+// Default settings (in seconds)
+const DEFAULTS = {
+    work: 25 * 60,
+    short: 5 * 60,
+    long: 15 * 60
+};
 
-// Pomodoro state machine
+// Pomodoro settings (will be loaded from Firestore or defaults)
+let workDuration = DEFAULTS.work;
+let shortBreakDuration = DEFAULTS.short;
+let longBreakDuration = DEFAULTS.long;
+
 let state = {
     mode: 'work', // 'work', 'shortBreak', 'longBreak'
-    timeRemaining: 25 * 60, // Default before settings load
+    timeRemaining: workDuration,
     cycle: 1, // Current work cycle (1-4)
 };
 
 let allSessions = [];
 
-// --- Settings Persistence ---
-function loadSettings() {
-    const savedWork = localStorage.getItem('workDuration') || 25;
-    const savedShort = localStorage.getItem('shortBreakDuration') || 5;
-    const savedLong = localStorage.getItem('longBreakDuration') || 15;
-
-    workDurationInput.value = savedWork;
-    shortBreakInput.value = savedShort;
-    longBreakInput.value = savedLong;
-
-    workDuration = parseInt(savedWork, 10) * 60;
-    shortBreakDuration = parseInt(savedShort, 10) * 60;
-    longBreakDuration = parseInt(savedLong, 10) * 60;
-
-    // If the timer is in its default state, update it with loaded settings
-    if (isPaused && state.mode === 'work' && state.timeRemaining === 25 * 60) {
+// --- Updated: Settings now sync with Firestore ---
+async function fetchSettings() {
+    if (user) {
+        try {
+            const doc = await settingsCollection.doc('timer').get();
+            if (doc.exists) {
+                const settings = doc.data();
+                workDurationInput.value = settings.work || 25;
+                shortBreakInput.value = settings.short || 5;
+                longBreakInput.value = settings.long || 15;
+            }
+        } catch (error) {
+            console.error("Error fetching settings, using defaults.", error);
+        }
+    }
+    // Apply the values from the input fields
+    workDuration = parseInt(workDurationInput.value, 10) * 60;
+    shortBreakDuration = parseInt(shortBreakInput.value, 10) * 60;
+    longBreakDuration = parseInt(longBreakInput.value, 10) * 60;
+    
+    // If timer is in a default state, reset to apply loaded settings
+    if (isPaused) {
         resetTimer();
     }
 }
 
-function saveSettings() {
-    localStorage.setItem('workDuration', workDurationInput.value);
-    localStorage.setItem('shortBreakDuration', shortBreakInput.value);
-    localStorage.setItem('longBreakDuration', longBreakInput.value);
-    loadSettings(); // Reload settings into the app
-    resetTimer(); // Reset the timer to apply new settings immediately
-    alert("Timer settings saved and timer has been reset.");
+async function saveSettings() {
+    const newSettings = {
+        work: parseInt(workDurationInput.value, 10),
+        short: parseInt(shortBreakInput.value, 10),
+        long: parseInt(longBreakInput.value, 10)
+    };
+
+    // Update local variables immediately for responsiveness
+    workDuration = newSettings.work * 60;
+    shortBreakDuration = newSettings.short * 60;
+    longBreakDuration = newSettings.long * 60;
+    resetTimer();
+    
+    // Use the global toast function defined in main.js
+    if (typeof showToast === 'function') {
+        showToast("Settings saved!", 'success');
+    }
+
+    if (user) {
+        try {
+            await settingsCollection.doc('timer').set(newSettings, { merge: true });
+        } catch (error) {
+            console.error("Could not save settings to cloud:", error);
+        }
+    }
 }
+
 
 // --- Firestore Functions ---
 function fetchSessions() {
     if (!focusSessionsCollection) return;
     
+    if (unsubscribeFocus) unsubscribeFocus(); // Unsubscribe from previous listener
+
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
     
-    focusSessionsCollection.where("completedAt", ">", yesterday).orderBy("completedAt", "desc").onSnapshot(snapshot => {
+    unsubscribeFocus = focusSessionsCollection.where("completedAt", ">", yesterday).orderBy("completedAt", "desc").onSnapshot(snapshot => {
         allSessions = snapshot.docs.map(doc => doc.data());
         renderHistory();
     }, err => {
@@ -91,6 +125,7 @@ async function saveCompletedSession() {
 }
 
 function renderHistory() {
+    // ... (This function remains the same)
     sessionsList.innerHTML = '';
     let totalMinutes = 0;
     if (allSessions.length === 0) {
@@ -119,7 +154,10 @@ function updateDisplay() {
     timerDisplay.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 }
 
+// --- Updated: Added haptic feedback ---
 function transitionState() {
+    if ('vibrate' in navigator) navigator.vibrate([100, 50, 100]); // Vibrate on session completion
+
     isPaused = true;
     startPauseBtn.textContent = 'Start';
     clearInterval(timerId);
@@ -151,15 +189,16 @@ function tick() {
     state.timeRemaining--;
     updateDisplay();
 
-    if (state.timeRemaining < 0) {
-        // Add a sound notification here if desired
+    if (state.timeRemaining <= 0) {
         transitionState();
     }
 }
 
+// --- Updated: Added haptic feedback ---
 function startPauseTimer() {
     isPaused = !isPaused;
     if (!isPaused) {
+        if ('vibrate' in navigator) navigator.vibrate(50); // Vibrate on start
         startPauseBtn.textContent = 'Pause';
         if (timerId === null) {
             timerId = setInterval(tick, 1000);
@@ -178,7 +217,7 @@ function resetTimer() {
     
     state = {
         mode: 'work',
-        timeRemaining: workDuration, // Reset to the current work duration
+        timeRemaining: workDuration,
         cycle: 1,
     };
     
@@ -190,28 +229,28 @@ function resetTimer() {
 // --- Initialization ---
 export function initFocus(currentUser) {
     user = currentUser;
-    loadSettings(); // Load user settings or defaults
 
     if (user) {
         focusSessionsCollection = firebase.firestore().collection('users').doc(user.uid).collection('focusSessions');
+        settingsCollection = firebase.firestore().collection('users').doc(user.uid).collection('settings'); // Init settings collection
         fetchSessions();
+        fetchSettings(); // Fetch cloud settings
     } else {
+        if (unsubscribeFocus) unsubscribeFocus();
         allSessions = [];
         renderHistory();
+        fetchSettings(); // Load default/local settings
     }
 
     if (!startPauseBtn.dataset.initialized) {
         startPauseBtn.addEventListener('click', startPauseTimer);
         resetBtn.addEventListener('click', resetTimer);
         
-        // Add event listeners for settings inputs
+        // Settings inputs now trigger save on change
         workDurationInput.addEventListener('change', saveSettings);
         shortBreakInput.addEventListener('change', saveSettings);
         longBreakInput.addEventListener('change', saveSettings);
 
         startPauseBtn.dataset.initialized = 'true';
     }
-    
-    // Always update display on init
-    resetTimer(); // Reset to apply loaded settings
 }

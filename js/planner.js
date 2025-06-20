@@ -3,19 +3,29 @@
 // --- DOM Elements ---
 const addTaskForm = document.getElementById('add-task-form');
 const taskInput = document.getElementById('task-input');
-const taskPriorityInput = document.getElementById('task-priority-input'); // New
-const taskCategoryInput = document.getElementById('task-category-input'); // New
+const taskPriorityInput = document.getElementById('task-priority-input');
+const taskCategoryInput = document.getElementById('task-category-input');
 const taskList = document.getElementById('task-list');
+
+// Edit Task Modal
 const editTaskModal = document.getElementById('edit-task-modal');
 const closeEditModalBtn = document.getElementById('close-edit-modal-btn');
 const editTaskForm = document.getElementById('edit-task-form');
 const editTaskInput = document.getElementById('edit-task-input');
-const aiTaskSuggestionBtn = document.getElementById('ai-task-suggestion-btn'); // New
+
+// --- Updated: AI Suggestion Modal Elements ---
+const aiTaskSuggestionBtn = document.getElementById('ai-task-suggestion-btn');
+const aiSuggestionModal = document.getElementById('ai-suggestion-modal');
+const closeAiModalBtn = document.getElementById('close-ai-modal-btn');
+const aiSuggestionForm = document.getElementById('ai-suggestion-form');
+const aiGoalInput = document.getElementById('ai-goal-input');
+
 
 // --- State ---
 let user = null;
 let tasksCollection;
 let editingTaskId = null;
+let unsubscribeTasks = null; // --- Added: To manage Firestore listener
 
 // --- Modal Control ---
 function openEditModal(task) {
@@ -30,12 +40,24 @@ function closeEditModal() {
     editTaskModal.classList.add('hidden');
 }
 
+// --- Added: AI Suggestion Modal Control ---
+function openAiModal() {
+    aiSuggestionModal.classList.remove('hidden');
+    aiGoalInput.focus();
+}
+
+function closeAiModal() {
+    aiSuggestionModal.classList.add('hidden');
+    aiSuggestionForm.reset();
+}
+
+
 // --- Core Functions ---
 
 function renderTasks(tasks) {
     const loader = document.getElementById('planner-loader');
     if (loader) {
-        loader.style.display = 'none'; // Hide skeleton loader
+        loader.style.display = 'none';
     }
 
     taskList.innerHTML = '';
@@ -59,7 +81,7 @@ function renderTasks(tasks) {
         
         taskEl.innerHTML = `
             <input type="checkbox" data-id="${task.id}" class="task-checkbox form-checkbox h-6 w-6 rounded-full text-green-500 bg-gray-300 dark:bg-slate-700 border-none focus:ring-2 focus:ring-green-400" ${isCompleted ? 'checked' : ''}>
-            <div class="flex-grow mx-4">
+            <div class="flex-grow mx-4 min-w-0">
                 <span class="task-text text-slate-800 dark:text-slate-200 ${isCompleted ? 'line-through' : ''}">${task.text}</span>
                 <div class="text-xs text-gray-500 dark:text-gray-400 font-medium mt-1">${task.category || 'General'}</div>
             </div>
@@ -72,11 +94,15 @@ function renderTasks(tasks) {
     });
 }
 
-async function fetchTasks() {
+// --- Updated: Now manages the listener subscription ---
+function fetchTasks() {
     if (!tasksCollection) return;
-    // NOTE: This requires creating a composite index in Firestore for 'priority' (desc) and 'createdAt' (desc).
-    // The link to create it will appear in your browser's console the first time this query runs.
-    tasksCollection.orderBy("priority", "desc").orderBy("createdAt", "desc").onSnapshot(snapshot => {
+    
+    if (unsubscribeTasks) {
+        unsubscribeTasks(); // Unsubscribe from previous listener
+    }
+
+    unsubscribeTasks = tasksCollection.orderBy("priority", "desc").orderBy("createdAt", "desc").onSnapshot(snapshot => {
         const tasks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         renderTasks(tasks);
     }, error => {
@@ -102,6 +128,7 @@ async function handleAddTask(e) {
     }
 }
 
+// --- Updated: Added haptic feedback ---
 async function handleTaskControls(e) {
     const target = e.target.closest('button, input');
     if (!target || !user) return;
@@ -110,6 +137,11 @@ async function handleTaskControls(e) {
         const taskId = target.dataset.id;
         const isCompleted = target.checked;
         await tasksCollection.doc(taskId).update({ completed: isCompleted });
+
+        // --- Added: Haptic feedback on task completion ---
+        if (isCompleted && 'vibrate' in navigator) {
+            navigator.vibrate(50); // Vibrate for 50ms
+        }
     }
 
     if (target.classList.contains('delete-task-btn')) {
@@ -134,20 +166,22 @@ async function handleUpdateTask(e) {
     }
 }
 
-// --- AI Feature ---
-async function handleAITaskSuggestion() {
+// --- Updated: AI Feature now uses a modal ---
+async function handleAITaskSuggestion(e) {
+    e.preventDefault();
     if (!user) {
         alert("Please log in to use AI suggestions.");
         return;
     }
-    const goal = prompt("What is your main goal or focus for today?\n(e.g., 'study for my physics exam', 'clean the house', 'work on my new project')");
-    if (!goal || goal.trim() === '') return;
+    
+    const goal = aiGoalInput.value.trim();
+    if (!goal) return;
 
-    aiTaskSuggestionBtn.textContent = 'Generating...';
-    aiTaskSuggestionBtn.disabled = true;
+    const submitButton = aiSuggestionForm.querySelector('button[type="submit"]');
+    submitButton.textContent = 'Generating...';
+    submitButton.disabled = true;
 
     try {
-        // This assumes you create a new Vercel serverless function at this endpoint
         const response = await fetch('/api/suggest-tasks', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -156,10 +190,11 @@ async function handleAITaskSuggestion() {
 
         if (!response.ok) throw new Error(`API Error: ${response.statusText}`);
         
-        const suggestions = await response.json(); // Expects an array of strings: ["Task 1", "Task 2"]
+        const suggestions = await response.json();
         
         if (suggestions && suggestions.length > 0) {
-            const confirmMessage = `AI suggested the following tasks:\n\n- ${suggestions.join('\n- ')}\n\nWould you like to add them to your planner?`;
+            closeAiModal(); // Close the modal first
+            const confirmMessage = `AI suggested the following tasks:\n\n- ${suggestions.join('\n- ')}\n\nWould you like to add them?`;
             if (confirm(confirmMessage)) {
                 const batch = firebase.firestore().batch();
                 suggestions.forEach(taskText => {
@@ -167,13 +202,12 @@ async function handleAITaskSuggestion() {
                     batch.set(newTaskRef, {
                         text: taskText,
                         completed: false,
-                        priority: 'medium', // Default priority for AI tasks
-                        category: 'General', // Default category
+                        priority: 'medium',
+                        category: 'General',
                         createdAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
                 });
                 await batch.commit();
-                alert(`${suggestions.length} tasks have been added.`);
             }
         } else {
             alert("The AI couldn't generate suggestions for that goal. Please try a different one.");
@@ -183,8 +217,8 @@ async function handleAITaskSuggestion() {
         console.error('AI Suggestion Error:', error);
         alert("Sorry, we couldn't get AI suggestions at the moment. Please try again later.");
     } finally {
-        aiTaskSuggestionBtn.textContent = 'Stuck? Get AI Task Suggestions';
-        aiTaskSuggestionBtn.disabled = false;
+        submitButton.textContent = 'Get Suggestions';
+        submitButton.disabled = false;
     }
 }
 
@@ -196,18 +230,27 @@ export function initPlanner(currentUser) {
         tasksCollection = firebase.firestore().collection('users').doc(user.uid).collection('tasks');
         fetchTasks();
     } else {
+        if (unsubscribeTasks) unsubscribeTasks(); // Unsubscribe when user logs out
         renderTasks([]);
     }
     
     if (!addTaskForm.dataset.initialized) {
         addTaskForm.addEventListener('submit', handleAddTask);
         taskList.addEventListener('click', handleTaskControls);
-        aiTaskSuggestionBtn.addEventListener('click', handleAITaskSuggestion);
         
+        // Edit Modal Listeners
         editTaskForm.addEventListener('submit', handleUpdateTask);
         closeEditModalBtn.addEventListener('click', closeEditModal);
         editTaskModal.addEventListener('click', (e) => {
             if (e.target === editTaskModal) closeEditModal();
+        });
+
+        // --- Updated: AI Modal Listeners ---
+        aiTaskSuggestionBtn.addEventListener('click', openAiModal);
+        aiSuggestionForm.addEventListener('submit', handleAITaskSuggestion);
+        closeAiModalBtn.addEventListener('click', closeAiModal);
+        aiSuggestionModal.addEventListener('click', (e) => {
+            if (e.target === aiSuggestionModal) closeAiModal();
         });
 
         addTaskForm.dataset.initialized = 'true';

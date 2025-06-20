@@ -9,10 +9,18 @@ const challengeGoalInput = document.getElementById('challenge-goal-input');
 const challengeDaysInput = document.getElementById('challenge-days-input');
 const challengeList = document.getElementById('challenge-list');
 
+// --- Added: Delete Confirmation Modal Elements ---
+const deleteChallengeModal = document.getElementById('delete-challenge-modal');
+const confirmDeleteChallengeBtn = document.getElementById('confirm-delete-challenge-btn');
+const cancelDeleteChallengeBtn = document.getElementById('cancel-delete-challenge-btn');
+
+
 // --- State & Firestore ---
 let user = null;
 let challengesCollection;
 let allChallenges = [];
+let unsubscribeChallenges = null; // --- Added: To manage Firestore listener
+let challengeToDeleteId = null; // --- Added: To hold the ID of the challenge being deleted
 
 // --- Modal Control ---
 function openChallengeModal() {
@@ -22,12 +30,23 @@ function openChallengeModal() {
 function closeChallengeModal() {
     addChallengeModal.classList.add('hidden');
     addChallengeForm.reset();
-    challengeDaysInput.value = 22; // Reset to default
+    challengeDaysInput.value = 22;
 }
+
+// --- Added: Delete Confirmation Modal Control ---
+function openDeleteConfirmModal(challengeId) {
+    challengeToDeleteId = challengeId;
+    deleteChallengeModal.classList.remove('hidden');
+}
+
+function closeDeleteConfirmModal() {
+    challengeToDeleteId = null;
+    deleteChallengeModal.classList.add('hidden');
+}
+
 
 // --- Core Functions ---
 function renderChallenges() {
-    // Hide the skeleton loader now that content is ready
     const loader = document.getElementById('challenge-loader');
     if (loader) {
         loader.style.display = 'none';
@@ -44,12 +63,12 @@ function renderChallenges() {
     }
 
     allChallenges.forEach(challenge => {
+        // ... (rest of the rendering logic remains the same)
         const completedDays = Object.values(challenge.days).filter(Boolean).length;
         const totalDays = challenge.totalDays;
         const progress = Math.round((completedDays / totalDays) * 100);
 
         const challengeEl = document.createElement('div');
-        // Added animation class for consistency
         challengeEl.className = 'challenge-item bg-white/50 dark:bg-slate-800/50 rounded-lg shadow-md overflow-hidden animate-fade-in-down';
         challengeEl.dataset.id = challenge.id;
         challengeEl.setAttribute('aria-expanded', 'false');
@@ -79,13 +98,11 @@ function renderChallenges() {
         const daysGrid = challengeEl.querySelector('.challenge-days-grid');
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-
         const startDate = challenge.startDate.toDate();
 
         for (let i = 1; i <= totalDays; i++) {
             const dayKey = `day${i}`;
             const isChecked = challenge.days[dayKey] || false;
-            
             const dayDate = new Date(startDate.getTime());
             dayDate.setDate(dayDate.getDate() + i - 1);
             const isDisabled = dayDate > today;
@@ -103,6 +120,7 @@ function renderChallenges() {
 }
 
 async function handleAddChallenge(e) {
+    // ... (this function remains the same)
     e.preventDefault();
     const goal = challengeGoalInput.value.trim();
     const totalDays = parseInt(challengeDaysInput.value, 10);
@@ -112,12 +130,7 @@ async function handleAddChallenge(e) {
         for (let i = 1; i <= totalDays; i++) {
             days[`day${i}`] = false;
         }
-        const newChallenge = {
-            goal,
-            totalDays,
-            startDate: firebase.firestore.Timestamp.now(),
-            days
-        };
+        const newChallenge = { goal, totalDays, startDate: firebase.firestore.Timestamp.now(), days };
         try {
             await challengesCollection.add(newChallenge);
             closeChallengeModal();
@@ -128,29 +141,39 @@ async function handleAddChallenge(e) {
     }
 }
 
+// --- Updated: No longer uses confirm(), opens modal instead ---
 async function handleDeleteChallenge(challengeId) {
-    if (user && confirm("Are you sure you want to delete this challenge? This cannot be undone.")) {
-        try {
-            await challengesCollection.doc(challengeId).delete();
-        } catch (error)            {
-            console.error("Error deleting challenge: ", error);
-            alert("Could not delete the challenge. Please try again.");
-        }
+    if (user) {
+        openDeleteConfirmModal(challengeId);
     }
 }
 
+// --- Added: New function to execute delete after confirmation ---
+async function executeDeleteChallenge() {
+    if (!challengeToDeleteId || !user) return;
+    try {
+        await challengesCollection.doc(challengeToDeleteId).delete();
+        if ('vibrate' in navigator) navigator.vibrate(50);
+    } catch (error) {
+        console.error("Error deleting challenge: ", error);
+        alert("Could not delete the challenge. Please try again.");
+    } finally {
+        closeDeleteConfirmModal();
+    }
+}
+
+// --- Updated: Added haptic feedback ---
 async function handleDayCheckboxChange(e, challengeId) {
     if (e.target.type === 'checkbox' && user) {
         const dayKey = e.target.dataset.day;
         const isChecked = e.target.checked;
         try {
             const challengeRef = challengesCollection.doc(challengeId);
-            await challengeRef.update({
-                [`days.${dayKey}`]: isChecked
-            });
+            await challengeRef.update({ [`days.${dayKey}`]: isChecked });
+            if ('vibrate' in navigator) navigator.vibrate(50); // Haptic feedback on check
         } catch (error) {
             console.error("Error updating challenge day: ", error);
-            e.target.checked = !isChecked;
+            e.target.checked = !isChecked; // Revert checkbox on error
             alert("Could not update progress. Please check your connection.");
         }
     }
@@ -163,8 +186,8 @@ function handleChallengeClick(e) {
     const challengeId = challengeItem.dataset.id;
 
     if (e.target.closest('.delete-challenge-btn')) {
-        e.stopPropagation(); // Prevent accordion from toggling when deleting
-        handleDeleteChallenge(challengeId);
+        e.stopPropagation();
+        handleDeleteChallenge(challengeId); // This now opens the modal
         return;
     }
     
@@ -181,10 +204,13 @@ function handleChallengeClick(e) {
     }
 }
 
-
+// --- Updated: Now manages the listener subscription ---
 function fetchChallenges() {
     if (!challengesCollection) return;
-    challengesCollection.orderBy("startDate", "desc").onSnapshot(snapshot => {
+
+    if (unsubscribeChallenges) unsubscribeChallenges();
+
+    unsubscribeChallenges = challengesCollection.orderBy("startDate", "desc").onSnapshot(snapshot => {
         allChallenges = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         renderChallenges();
     }, error => {
@@ -200,6 +226,7 @@ export function initChallenge(currentUser) {
         challengesCollection = firebase.firestore().collection('users').doc(user.uid).collection('challenges');
         fetchChallenges();
     } else {
+        if (unsubscribeChallenges) unsubscribeChallenges(); // Unsubscribe on logout
         allChallenges = [];
         renderChallenges();
     }
@@ -213,6 +240,13 @@ export function initChallenge(currentUser) {
         
         addChallengeForm.addEventListener('submit', handleAddChallenge);
         challengeList.addEventListener('click', handleChallengeClick);
+
+        // --- Added: Listeners for the new delete modal ---
+        confirmDeleteChallengeBtn.addEventListener('click', executeDeleteChallenge);
+        cancelDeleteChallengeBtn.addEventListener('click', closeDeleteConfirmModal);
+        deleteChallengeModal.addEventListener('click', (e) => {
+            if (e.target === deleteChallengeModal) closeDeleteConfirmModal();
+        });
         
         addChallengeForm.dataset.initialized = 'true';
     }
