@@ -13,7 +13,7 @@ const closeEditModalBtn = document.getElementById('close-edit-modal-btn');
 const editTaskForm = document.getElementById('edit-task-form');
 const editTaskInput = document.getElementById('edit-task-input');
 
-// --- Updated: AI Suggestion Modal Elements ---
+// AI Suggestion Modal Elements
 const aiTaskSuggestionBtn = document.getElementById('ai-task-suggestion-btn');
 const aiSuggestionModal = document.getElementById('ai-suggestion-modal');
 const closeAiModalBtn = document.getElementById('close-ai-modal-btn');
@@ -25,7 +25,7 @@ const aiGoalInput = document.getElementById('ai-goal-input');
 let user = null;
 let tasksCollection;
 let editingTaskId = null;
-let unsubscribeTasks = null; // --- Added: To manage Firestore listener
+let unsubscribeTasks = null; // To manage Firestore listener
 
 // --- Modal Control ---
 function openEditModal(task) {
@@ -40,7 +40,6 @@ function closeEditModal() {
     editTaskModal.classList.add('hidden');
 }
 
-// --- Added: AI Suggestion Modal Control ---
 function openAiModal() {
     aiSuggestionModal.classList.remove('hidden');
     aiGoalInput.focus();
@@ -77,15 +76,15 @@ function renderTasks(tasks) {
         const isCompleted = task.completed;
         const priorityClass = priorityStyles[task.priority] || 'border-l-gray-400';
         
-        taskEl.className = `task-card flex items-center bg-white/60 dark:bg-slate-800/60 p-3 rounded-lg shadow transition-all duration-300 ${isCompleted ? 'opacity-60' : ''} ${priorityClass} border-l-4 animate-fade-in-down`;
+        taskEl.className = `task-card flex items-start bg-white/60 dark:bg-slate-800/60 p-3 rounded-lg shadow transition-all duration-300 ${isCompleted ? 'opacity-60' : ''} ${priorityClass} border-l-4 animate-fade-in-down`;
         
         taskEl.innerHTML = `
-            <input type="checkbox" data-id="${task.id}" class="task-checkbox form-checkbox h-6 w-6 rounded-full text-green-500 bg-gray-300 dark:bg-slate-700 border-none focus:ring-2 focus:ring-green-400" ${isCompleted ? 'checked' : ''}>
+            <input type="checkbox" data-id="${task.id}" class="task-checkbox form-checkbox h-6 w-6 rounded-full text-green-500 bg-gray-300 dark:bg-slate-700 border-none focus:ring-2 focus:ring-green-400 mt-1" ${isCompleted ? 'checked' : ''}>
             <div class="flex-grow mx-4 min-w-0">
-                <span class="task-text text-slate-800 dark:text-slate-200 ${isCompleted ? 'line-through' : ''}">${task.text}</span>
+                <span class="task-text text-slate-800 dark:text-slate-200">${task.text}</span>
                 <div class="text-xs text-gray-500 dark:text-gray-400 font-medium mt-1">${task.category || 'General'}</div>
             </div>
-            <div class="task-controls flex items-center space-x-2">
+            <div class="task-controls flex items-center">
                 <button data-task='${JSON.stringify(task)}' class="edit-task-btn text-blue-500 hover:text-blue-700"><ion-icon name="create-outline" class="text-xl"></ion-icon></button>
                 <button data-id="${task.id}" class="delete-task-btn text-red-500 hover:text-red-700"><ion-icon name="trash-outline" class="text-xl"></ion-icon></button>
             </div>
@@ -94,7 +93,6 @@ function renderTasks(tasks) {
     });
 }
 
-// --- Updated: Now manages the listener subscription ---
 function fetchTasks() {
     if (!tasksCollection) return;
     
@@ -128,7 +126,6 @@ async function handleAddTask(e) {
     }
 }
 
-// --- Updated: Added haptic feedback ---
 async function handleTaskControls(e) {
     const target = e.target.closest('button, input');
     if (!target || !user) return;
@@ -138,9 +135,8 @@ async function handleTaskControls(e) {
         const isCompleted = target.checked;
         await tasksCollection.doc(taskId).update({ completed: isCompleted });
 
-        // --- Added: Haptic feedback on task completion ---
         if (isCompleted && 'vibrate' in navigator) {
-            navigator.vibrate(50); // Vibrate for 50ms
+            navigator.vibrate(50);
         }
     }
 
@@ -166,7 +162,6 @@ async function handleUpdateTask(e) {
     }
 }
 
-// --- Updated: AI Feature now uses a modal ---
 async function handleAITaskSuggestion(e) {
     e.preventDefault();
     if (!user) {
@@ -193,7 +188,7 @@ async function handleAITaskSuggestion(e) {
         const suggestions = await response.json();
         
         if (suggestions && suggestions.length > 0) {
-            closeAiModal(); // Close the modal first
+            closeAiModal();
             const confirmMessage = `AI suggested the following tasks:\n\n- ${suggestions.join('\n- ')}\n\nWould you like to add them?`;
             if (confirm(confirmMessage)) {
                 const batch = firebase.firestore().batch();
@@ -230,7 +225,7 @@ export function initPlanner(currentUser) {
         tasksCollection = firebase.firestore().collection('users').doc(user.uid).collection('tasks');
         fetchTasks();
     } else {
-        if (unsubscribeTasks) unsubscribeTasks(); // Unsubscribe when user logs out
+        if (unsubscribeTasks) unsubscribeTasks();
         renderTasks([]);
     }
     
@@ -238,14 +233,12 @@ export function initPlanner(currentUser) {
         addTaskForm.addEventListener('submit', handleAddTask);
         taskList.addEventListener('click', handleTaskControls);
         
-        // Edit Modal Listeners
         editTaskForm.addEventListener('submit', handleUpdateTask);
         closeEditModalBtn.addEventListener('click', closeEditModal);
         editTaskModal.addEventListener('click', (e) => {
             if (e.target === editTaskModal) closeEditModal();
         });
 
-        // --- Updated: AI Modal Listeners ---
         aiTaskSuggestionBtn.addEventListener('click', openAiModal);
         aiSuggestionForm.addEventListener('submit', handleAITaskSuggestion);
         closeAiModalBtn.addEventListener('click', closeAiModal);

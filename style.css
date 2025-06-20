@@ -179,13 +179,24 @@ input, textarea, select {
   height: 90svh; /* Uses "safe" small viewport height, avoiding notches/dynamic toolbars */
 }
 
-/* Ensure long text in tasks and notes doesn't break layout */
+/* --- Planner & Notes Text Wrapping Fix --- */
+
 .task-text, .note-header h4 {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal; /* Allow text to wrap to multiple lines */
+  word-break: break-word; /* Break long words to prevent overflow */
+  line-height: 1.5; /* Improve readability for multi-line text */
   min-width: 0; /* Important for flexbox truncation */
+
+  /* Reset old text-overflow styles */
+  overflow: visible;
+  text-overflow: initial;
 }
+
+/* Control the spacing of the edit/delete icons in the planner */
+.task-controls {
+  gap: 0.25rem; /* This sets a small space between the icons (closer) */
+}
+
 
 /* Larger, more touch-friendly tap targets for controls */
 .task-checkbox {

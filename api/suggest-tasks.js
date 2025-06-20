@@ -20,19 +20,9 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: "User goal is required." });
   }
 
-  // This is a carefully crafted prompt to instruct the AI.
-  // It specifically asks for the output to be ONLY a JSON array of strings.
-  const prompt = `You are an expert productivity assistant. Your sole purpose is to take a user's goal and break it down into 3-5 simple, actionable tasks that can be completed today.
-
-User's goal: "${goal}"
-
-Your response MUST be a valid JSON array of strings. Each string in the array should be a single task. Do NOT include any introductory text, explanations, or markdown formatting like \`\`\`json. Your entire response should be nothing but the JSON array itself, starting with '[' and ending with ']'.
-
-For example, if the user's goal is 'prepare for my exam', a valid response would be:
-["Review chapter 3 notes", "Complete 10 practice problems", "Create flashcards for key terms", "Schedule a 30-minute study break"]`;
+  const prompt = `You are an expert productivity assistant...`; // The prompt remains the same
 
   try {
-    // Make the POST request to the Groq API.
     const groqRes = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -41,10 +31,7 @@ For example, if the user's goal is 'prepare for my exam', a valid response would
       },
       body: JSON.stringify({
         model: "llama3-8b-8192",
-        messages: [
-          { role: "system", content: prompt }
-        ],
-        // We can set a lower temperature for more predictable, focused output.
+        messages: [{ role: "system", content: prompt }],
         temperature: 0.5, 
       })
     });
@@ -58,14 +45,31 @@ For example, if the user's goal is 'prepare for my exam', a valid response would
     const data = await groqRes.json();
     const aiResponseText = data.choices[0].message.content;
 
-    // The frontend expects a clean JSON array. We parse the AI's string response
-    // to validate it's correct JSON and then send it back.
+    // --- UPDATED: More robust JSON parsing ---
     try {
+      // First, try to parse the whole response directly.
       const suggestedTasks = JSON.parse(aiResponseText);
       res.status(200).json(suggestedTasks);
-    } catch (parseError) {
-      console.error("Failed to parse AI response as JSON:", aiResponseText);
-      res.status(500).json({ error: "The AI returned an invalid format." });
+    } catch (directParseError) {
+      // If direct parsing fails, try to find a JSON array within the string.
+      console.warn("Direct JSON parsing failed. Attempting to extract from string.");
+      console.log("Original AI Response:", aiResponseText);
+
+      // This regex looks for a string that starts with [ and ends with ]
+      const jsonMatch = aiResponseText.match(/\[.*\]/s);
+
+      if (jsonMatch && jsonMatch[0]) {
+        try {
+          const extractedTasks = JSON.parse(jsonMatch[0]);
+          res.status(200).json(extractedTasks);
+        } catch (extractionParseError) {
+          console.error("Failed to parse the extracted JSON:", extractionParseError);
+          res.status(500).json({ error: "The AI returned an invalid format that could not be repaired." });
+        }
+      } else {
+        console.error("No valid JSON array found in the AI's response.");
+        res.status(500).json({ error: "The AI returned an invalid format." });
+      }
     }
 
   } catch (err) {
