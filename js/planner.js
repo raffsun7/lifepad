@@ -1,12 +1,14 @@
-// js/planner.js --- FINAL VERSION
+// js/planner.js --- FINAL VERSION WITH STYLED RESPONSE MODAL
 
 // --- State ---
 let user = null;
 let tasksCollection;
 let editingTaskId = null;
 let unsubscribeTasks = null;
+let currentAiSuggestions = []; // Store current suggestions
 
-// --- Modal Control ---
+// --- Modal Control Functions & Other Helpers (functions remain the same) ---
+// ... (All other helper functions like openEditModal, closeEditModal, renderTasks, etc., are unchanged)
 function openEditModal(task, editTaskInput, editTaskModal) {
     editingTaskId = task.id;
     editTaskInput.value = task.text;
@@ -29,8 +31,6 @@ function closeAiModal(aiSuggestionModal, aiSuggestionForm) {
     aiSuggestionForm.reset();
 }
 
-
-// --- Core Functions ---
 function renderTasks(tasks) {
     const taskList = document.getElementById('task-list');
     const loader = document.getElementById('planner-loader');
@@ -135,10 +135,15 @@ async function handleUpdateTask(e) {
     }
 }
 
+
+// --- UPDATED: Main function to handle AI Suggestions ---
 async function handleAITaskSuggestion(e) {
     e.preventDefault();
-    if (!user) { alert("Please log in to use AI suggestions."); return; }
-    
+    if (!user) {
+        alert("Please log in to use AI suggestions.");
+        return;
+    }
+
     const aiSuggestionForm = document.getElementById('ai-suggestion-form');
     const aiGoalInput = document.getElementById('ai-goal-input');
     const aiSuggestionModal = document.getElementById('ai-suggestion-modal');
@@ -150,31 +155,73 @@ async function handleAITaskSuggestion(e) {
     submitButton.disabled = true;
 
     try {
-        const response = await fetch('/api/suggest-tasks', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ goal: goal }) });
+        const response = await fetch('/api/suggest-tasks', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ goal: goal }),
+        });
+
         if (!response.ok) throw new Error(`API Error: ${response.statusText}`);
+        
         const suggestions = await response.json();
         
         if (suggestions && suggestions.length > 0) {
-            closeAiModal(aiSuggestionModal, aiSuggestionForm);
-            const confirmMessage = `AI suggested the following tasks:\n\n- ${suggestions.join('\n- ')}\n\nWould you like to add them?`;
-            if (confirm(confirmMessage)) {
-                const batch = firebase.firestore().batch();
-                suggestions.forEach(taskText => {
-                    const newTaskRef = tasksCollection.doc();
-                    batch.set(newTaskRef, { text: taskText, completed: false, priority: 'medium', category: 'General', createdAt: firebase.firestore.FieldValue.serverTimestamp() });
-                });
-                await batch.commit();
-            }
+            currentAiSuggestions = suggestions; // Store suggestions
+            closeAiModal(aiSuggestionModal, aiSuggestionForm); // Hide the asking form
+            
+            const aiSuggestionsList = document.getElementById('ai-suggestions-list');
+            const aiResponseModal = document.getElementById('ai-response-modal');
+            
+            // Populate the new styled modal
+            aiSuggestionsList.innerHTML = '';
+            suggestions.forEach(taskText => {
+                const item = document.createElement('div');
+                item.className = 'suggestion-item';
+                item.innerHTML = `<ion-icon name="checkmark-circle-outline"></ion-icon><span>${taskText}</span>`;
+                aiSuggestionsList.appendChild(item);
+            });
+            
+            // Show the new modal
+            aiResponseModal.classList.remove('hidden');
+
         } else {
             alert("The AI couldn't generate suggestions for that goal.");
         }
 
     } catch (error) {
         console.error('AI Suggestion Error:', error);
-        alert("Sorry, we couldn't get AI suggestions at the moment.");
+        alert("Sorry, we couldn't get AI suggestions at the moment. Please try again later.");
     } finally {
         submitButton.textContent = 'Get Suggestions';
         submitButton.disabled = false;
+    }
+}
+
+// --- ADDED: Function to add the suggested tasks to the planner ---
+async function addSuggestionsToPlanner() {
+    if (currentAiSuggestions.length === 0) return;
+
+    const batch = firebase.firestore().batch();
+    currentAiSuggestions.forEach(taskText => {
+        const newTaskRef = tasksCollection.doc();
+        batch.set(newTaskRef, {
+            text: taskText,
+            completed: false,
+            priority: 'medium',
+            category: 'General',
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+    });
+
+    try {
+        await batch.commit();
+        if ('vibrate' in navigator) navigator.vibrate(50);
+    } catch (error) {
+        console.error("Error adding suggested tasks:", error);
+        alert("Could not add the tasks. Please try again.");
+    } finally {
+        currentAiSuggestions = []; // Clear stored suggestions
+        document.getElementById('ai-response-modal').classList.add('hidden');
     }
 }
 
@@ -196,17 +243,27 @@ export function initPlanner(currentUser) {
         return; 
     }
     
+    // --- Elements are selected inside init to ensure they exist ---
     const taskList = document.getElementById('task-list');
     const editTaskModal = document.getElementById('edit-task-modal');
     const closeEditModalBtn = document.getElementById('close-edit-modal-btn');
     const editTaskForm = document.getElementById('edit-task-form');
     
+    // AI Suggestion "Asking" Modal
     const aiTaskSuggestionBtn = document.getElementById('ai-task-suggestion-btn');
     const aiSuggestionModal = document.getElementById('ai-suggestion-modal');
     const closeAiModalBtn = document.getElementById('close-ai-modal-btn');
     const aiSuggestionForm = document.getElementById('ai-suggestion-form');
     const aiGoalInput = document.getElementById('ai-goal-input');
 
+    // --- ADDED: New AI "Response" Modal Elements ---
+    const aiResponseModal = document.getElementById('ai-response-modal');
+    const closeAiResponseBtn = document.getElementById('close-ai-response-btn');
+    const skipAiSuggestionsBtn = document.getElementById('skip-ai-suggestions-btn');
+    const addAiSuggestionsBtn = document.getElementById('add-ai-suggestions-btn');
+
+
+    // --- Event Listeners ---
     addTaskForm.addEventListener('submit', handleAddTask);
     taskList.addEventListener('click', handleTaskControls);
     
@@ -216,11 +273,21 @@ export function initPlanner(currentUser) {
         if (e.target === editTaskModal) closeEditModal(editTaskModal);
     });
 
+    // Listeners for the "asking" modal
     aiTaskSuggestionBtn.addEventListener('click', () => openAiModal(aiSuggestionModal, aiGoalInput));
     aiSuggestionForm.addEventListener('submit', handleAITaskSuggestion);
     closeAiModalBtn.addEventListener('click', () => closeAiModal(aiSuggestionModal, aiSuggestionForm));
     aiSuggestionModal.addEventListener('click', (e) => {
         if (e.target === aiSuggestionModal) closeAiModal(aiSuggestionModal, aiSuggestionForm);
+    });
+
+    // --- ADDED: Listeners for the new "response" modal ---
+    addAiSuggestionsBtn.addEventListener('click', addSuggestionsToPlanner);
+    const closeResponseModal = () => aiResponseModal.classList.add('hidden');
+    closeAiResponseBtn.addEventListener('click', closeResponseModal);
+    skipAiSuggestionsBtn.addEventListener('click', closeResponseModal);
+    aiResponseModal.addEventListener('click', (e) => {
+        if(e.target === aiResponseModal) closeResponseModal();
     });
 
     addTaskForm.dataset.initialized = 'true';

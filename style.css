@@ -221,3 +221,43 @@ input, textarea, select {
   margin-bottom: 8px;
   border-radius: 12px; /* Larger radius for a modern feel */
 }
+
+
+
+/* --- AI Suggestion Response Modal Styling --- */
+
+/* Styling for the list container inside the modal */
+#ai-suggestions-list {
+  border: 1px solid rgba(128, 128, 128, 0.1);
+  min-height: 100px; /* Ensures the box has a decent size even if empty */
+}
+
+/* Styling for each suggestion item */
+.suggestion-item {
+  display: flex;
+  align-items: center;
+  padding: 8px;
+  border-radius: 6px;
+  background-color: rgba(255, 255, 255, 0.3);
+  transition: background-color 0.2s ease;
+}
+
+.dark .suggestion-item {
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+.suggestion-item:hover {
+  background-color: rgba(255, 255, 255, 0.5);
+}
+
+.dark .suggestion-item:hover {
+  background-color: rgba(0, 0, 0, 0.4);
+}
+
+/* Style for the checkmark icon next to each suggestion */
+.suggestion-item ion-icon {
+  color: #0ea5e9; /* sky-500 */
+  margin-right: 12px;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
