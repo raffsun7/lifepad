@@ -261,3 +261,7 @@ input, textarea, select {
   font-size: 1.25rem;
   flex-shrink: 0;
 }
+
+#install-pwa-popup.show {
+  transform: translateY(0);
+}

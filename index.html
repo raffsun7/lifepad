@@ -161,7 +161,10 @@
                     </div>
                 </div>
                 <div id="sessions-history-container" class="max-w-md mx-auto mt-8">
-                    <h3 class="text-2xl font-bold mb-4">Today's Focus</h3>
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-2xl font-bold">Today's Focus</h3>
+                        <button id="clear-focus-history-btn" class="text-xs font-semibold text-red-500 hover:underline">Clear All</button>
+                    </div>
                     <div class="text-lg mb-4">Total Focus Time: <span id="total-focus-time" class="font-bold">0 minutes</span></div>
                     <div id="sessions-list" class="space-y-2"></div>
                 </div>
@@ -344,6 +347,26 @@
             </div>
         </div>
     </div>
+
+    <div id="install-pwa-popup" class="hidden fixed bottom-0 left-0 right-0 z-50 p-4 transition-transform duration-500 transform translate-y-full">
+        <div class="glass-pane max-w-xl mx-auto flex items-center justify-between bg-white/80 dark:bg-dark-card/80 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/20 dark:border-dark-border p-4">
+            <div class="flex items-center">
+                <img src="files/logo.svg" alt="LifePad+ Logo" class="w-12 h-12 mr-4">
+                <div>
+                    <h4 class="font-bold text-gray-800 dark:text-gray-200">Install LifePad+</h4>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">Add to your home screen for a better experience.</p>
+                </div>
+            </div>
+            <div class="flex items-center">
+                <button id="dismiss-pwa-btn" class="font-semibold text-gray-500 dark:text-gray-400 p-3 hover:bg-black/5 dark:hover:bg-white/5 rounded-full mr-2">Later</button>
+                <button id="install-pwa-btn" class="bg-sky-500 hover:bg-sky-600 text-white font-bold py-2 px-5 rounded-lg shadow-md">Install</button>
+            </div>
+        </div>
+    </div>
+
+    <audio id="tick-sound" src="files/tick.mp3" preload="auto"></audio>
+    <audio id="short-bell-sound" src="files/short-bell.mp3" preload="auto"></audio>
+    <audio id="long-bell-sound" src="files/long-bell.mp3" preload="auto"></audio>
 
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-auth-compat.js"></script>

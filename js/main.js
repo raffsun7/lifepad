@@ -1,9 +1,11 @@
-// js/main.js
+// js/main.js --- FINAL VERSION
 
 import { initNavigation, showSection, updateAuthUI } from './ui.js';
 import { initTheme } from './theme.js';
 
-// A map of section IDs to functions that will dynamically load the corresponding module.
+// Global variable to hold the install prompt event
+let deferredInstallPrompt = null;
+
 const sectionInitializers = {
     mood: () => import('./mood.js').then(module => module.initMood),
     planner: () => import('./planner.js').then(module => module.initPlanner),
@@ -12,7 +14,6 @@ const sectionInitializers = {
     challenge: () => import('./challenge.js').then(module => module.initChallenge),
 };
 
-// A set to keep track of which sections have already been initialized.
 const initializedSections = new Set();
 let currentUser = null;
 
@@ -21,7 +22,6 @@ let currentUser = null;
  * @param {string} sectionId The ID of the section to initialize.
  */
 async function initializeSection(sectionId) {
-    // Do nothing if the section is already initialized or doesn't have an initializer.
     if (initializedSections.has(sectionId) || !sectionInitializers[sectionId]) {
         return;
     }
@@ -47,15 +47,14 @@ function setupLazyLoader() {
             if (entry.isIntersecting) {
                 const sectionId = entry.target.id;
                 initializeSection(sectionId);
-                obs.unobserve(entry.target); // Stop observing the element once it has been loaded.
+                obs.unobserve(entry.target);
             }
         });
     }, { 
-        rootMargin: '50px', // Start loading when the section is 50px away from the viewport.
+        rootMargin: '50px',
     });
 
     sections.forEach(section => {
-        // Only observe sections that haven't been initialized yet.
         if (!initializedSections.has(section.id)) {
             observer.observe(section);
         }
@@ -63,11 +62,12 @@ function setupLazyLoader() {
 }
 
 /**
- * --- Added: Helper function to show a simple toast notification ---
+ * Helper function to show a simple toast notification.
+ * Attached to the window object to be globally accessible.
  * @param {string} message The message to display in the toast.
  * @param {string} type 'success' for green, 'error' for red/default.
  */
-function showToast(message, type = 'error') {
+window.showToast = function(message, type = 'error') {
     const toast = document.createElement('div');
     const toastId = `toast-${Date.now()}`;
     toast.id = toastId;
@@ -81,38 +81,89 @@ function showToast(message, type = 'error') {
         if (activeToast) {
             activeToast.remove();
         }
-    }, 4000); // Toast disappears after 4 seconds
+    }, 4000);
 }
 
 /**
  * The main function that runs when the DOM is ready.
  */
 function onReady() {
-    // --- Initialize modules that DON'T depend on the user ---
     initTheme();
     initNavigation();
 
-    // Listen for changes in authentication state (login/logout).
+    // --- PWA Install Prompt Logic (Corrected "Show Once" Logic for Android) ---
+    const installPopup = document.getElementById('install-pwa-popup');
+    const installBtn = document.getElementById('install-pwa-btn');
+    const dismissBtn = document.getElementById('dismiss-pwa-btn');
+
+    if(installPopup && installBtn && dismissBtn) {
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredInstallPrompt = e;
+
+            const hasBeenShown = localStorage.getItem('pwaInstallPromptShown');
+
+            // Only proceed if the prompt has never been shown before.
+            if (!hasBeenShown) {
+                const isAndroid = /android/i.test(navigator.userAgent);
+                
+                // Only show the popup if the user is on Android.
+                if (isAndroid) {
+                    installPopup.classList.remove('hidden');
+                    setTimeout(() => installPopup.classList.add('show'), 100);
+                    
+                    // Set the flag immediately so this block never runs again.
+                    localStorage.setItem('pwaInstallPromptShown', 'true');
+                }
+            }
+        });
+
+        installBtn.addEventListener('click', async () => {
+            installPopup.classList.remove('show');
+            if (deferredInstallPrompt) {
+                deferredInstallPrompt.prompt();
+                await deferredInstallPrompt.userChoice;
+                deferredInstallPrompt = null;
+            }
+        });
+
+        dismissBtn.addEventListener('click', () => {
+            installPopup.classList.remove('show');
+        });
+    }
+
+    // --- Service Worker Registration ---
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/service-worker.js')
+                .then(registration => {
+                    console.log('Service Worker registered with scope:', registration.scope);
+                })
+                .catch(err => {
+                    console.error('Service Worker registration failed:', err);
+                });
+        });
+    }
+
+    // --- Firebase Auth & App Initialization ---
     firebase.auth().onAuthStateChanged(user => {
         currentUser = user;
         updateAuthUI(user); 
         
-        // --- Initialize the default section immediately ---
         const defaultSection = 'mood';
         showSection(defaultSection);
         initializeSection(defaultSection);
 
-        // --- Set up lazy loading for all other sections ---
         setupLazyLoader();
     });
 
-    // --- Added: Global listeners for online/offline status ---
+    // --- Global Online/Offline Status Listeners ---
     window.addEventListener('offline', () => {
-        showToast("You're offline. Changes will sync when you're back.");
+        window.showToast("You're offline. Changes will sync when you're back.");
     });
 
     window.addEventListener('online', () => {
-        showToast("You're back online!", 'success');
+        window.showToast("You're back online!", 'success');
     });
 }
 
