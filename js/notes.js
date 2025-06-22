@@ -1,4 +1,4 @@
-// js/notes.js
+// js/notes.js --- FINAL VERSION
 
 // --- DOM Elements ---
 const addNoteBtn = document.getElementById('add-note-btn');
@@ -11,7 +11,7 @@ const notesFilterBar = document.getElementById('notes-filter-bar');
 const noteTagsContainer = document.getElementById('note-tags');
 const noteSearchInput = document.getElementById('note-search-input');
 
-// --- Added: Delete Confirmation Modal Elements ---
+// Delete Confirmation Modal Elements
 const deleteNoteModal = document.getElementById('delete-note-modal');
 const confirmDeleteNoteBtn = document.getElementById('confirm-delete-note-btn');
 const cancelDeleteNoteBtn = document.getElementById('cancel-delete-note-btn');
@@ -24,8 +24,8 @@ let quill; // For the rich text editor
 let allNotes = [];
 let currentFilter = 'All';
 let currentSearchQuery = '';
-let unsubscribeNotes = null; // --- Added: To manage Firestore listener
-let noteToDeleteId = null; // --- Added: To hold the ID of the note being deleted
+let unsubscribeNotes = null; // To manage Firestore listener
+let noteToDeleteId = null; // To hold the ID of the note being deleted
 
 // --- Modal Control Functions ---
 function openNoteModal() {
@@ -45,7 +45,6 @@ function closeNoteModal() {
     addNoteForm.reset();
 }
 
-// --- Added: Delete Confirmation Modal Control ---
 function openDeleteConfirmModal(noteId) {
     noteToDeleteId = noteId;
     deleteNoteModal.classList.remove('hidden');
@@ -59,7 +58,6 @@ function closeDeleteConfirmModal() {
 
 // --- Utility to get the tag color ---
 const getTagColor = (tag) => {
-    // ... (this function remains the same)
     switch (tag) {
         case 'Gratitude': return 'bg-green-200 dark:bg-green-900/50 text-green-800 dark:text-green-300';
         case 'Du\'a': return 'bg-blue-200 dark:bg-blue-900/50 text-blue-800 dark:text-blue-300';
@@ -70,7 +68,6 @@ const getTagColor = (tag) => {
 };
 
 // --- Core Functions ---
-// --- Updated: Now includes DOMPurify for security ---
 function renderNotes(notesToRender) {
     const loader = document.getElementById('notes-loader');
     if (loader) loader.style.display = 'none';
@@ -87,7 +84,7 @@ function renderNotes(notesToRender) {
 
         const date = note.createdAt ? note.createdAt.toDate().toLocaleString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : 'Just now';
         
-        // --- Security: Sanitize user-generated HTML content before rendering ---
+        // Security: Sanitize user-generated HTML content before rendering
         const cleanContent = DOMPurify.sanitize(note.textContent);
 
         noteEl.innerHTML = `
@@ -117,15 +114,13 @@ function handleNoteClick(e) {
     const noteCard = e.target.closest('.note-card');
     if (!noteCard) return;
 
-    // Handle delete button click
     const deleteBtn = e.target.closest('.delete-note-btn');
     if (deleteBtn) {
-        e.stopPropagation(); // prevent accordion from toggling
+        e.stopPropagation();
         openDeleteConfirmModal(deleteBtn.dataset.id);
         return;
     }
 
-    // Handle accordion toggle
     const header = e.target.closest('.note-header');
     if (header) {
         const content = noteCard.querySelector('.note-content');
@@ -135,8 +130,6 @@ function handleNoteClick(e) {
     }
 }
 
-
-// --- Updated: Now manages the listener subscription ---
 function fetchNotes() {
     if (!notesCollection) return;
 
@@ -169,7 +162,6 @@ function filterAndRenderNotes() {
     renderNotes(searchFiltered);
 }
 
-// --- Updated: Added haptic feedback ---
 async function handleSaveNote(e) {
     e.preventDefault();
     const title = noteTitleInput.value.trim();
@@ -194,7 +186,7 @@ async function handleSaveNote(e) {
                 tag: selectedTag,
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
             });
-            if ('vibrate' in navigator) navigator.vibrate(50); // Haptic feedback
+            if ('vibrate' in navigator) navigator.vibrate(50);
             closeNoteModal();
         } catch (error) {
             console.error("Error saving note: ", error);
@@ -205,12 +197,11 @@ async function handleSaveNote(e) {
     }
 }
 
-// --- Added: New function to execute the delete after confirmation ---
 async function executeDeleteNote() {
     if (!noteToDeleteId || !user) return;
     try {
         await notesCollection.doc(noteToDeleteId).delete();
-        if ('vibrate' in navigator) navigator.vibrate(50); // Haptic feedback
+        if ('vibrate' in navigator) navigator.vibrate(50);
     } catch (error) {
         console.error("Error deleting note: ", error);
         alert("Could not delete the note. Please try again.");
@@ -219,13 +210,44 @@ async function executeDeleteNote() {
     }
 }
 
-// --- Other event handlers (filter, search, etc.) remain largely the same ---
 function handleFilterClick(e) {
-    // ...
+    const filterBtn = e.target.closest('.filter-btn');
+    if (!filterBtn) return;
+
+    currentFilter = filterBtn.dataset.tag;
+    const baseClasses = "filter-btn text-sm font-semibold rounded-full px-4 py-2 transition-all duration-200 backdrop-blur-sm";
+    const activeClasses = `${baseClasses} bg-sky-500/80 dark:bg-sky-500/70 border-transparent text-white ring-2 ring-sky-300 dark:ring-sky-400`;
+    const inactiveClasses = `${baseClasses} bg-black/5 dark:bg-white/10 border border-gray-300/50 dark:border-dark-border/50 text-gray-700 dark:text-gray-300`;
+
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.className = (btn.dataset.tag === currentFilter) ? activeClasses : inactiveClasses;
+    });
+
+    filterAndRenderNotes();
 }
+
 function handleTagSelectionUI(e) {
-    // ...
+    const targetLabel = e.target.closest('.tag-label');
+    if (!targetLabel) return;
+
+    const radioInput = targetLabel.querySelector('input[type="radio"]');
+    if (radioInput) {
+        radioInput.checked = true;
+    }
+
+    const baseClasses = "inline-block cursor-pointer rounded-full px-4 py-2 text-sm font-semibold transition-all duration-200 backdrop-blur-sm";
+    const activeClasses = `${baseClasses} bg-sky-500/80 dark:bg-sky-500/70 border-transparent text-white ring-2 ring-sky-300 dark:ring-sky-400`;
+    const inactiveClasses = `${baseClasses} bg-black/5 dark:bg-white/10 border border-gray-300/50 dark:border-dark-border/50 text-gray-700 dark:text-gray-300`;
+
+    noteTagsContainer.querySelectorAll('.tag-label').forEach(label => {
+        const span = label.querySelector('span');
+        const input = label.querySelector('input[type="radio"]');
+        if (span && input) {
+            span.className = input.checked ? activeClasses : inactiveClasses;
+        }
+    });
 }
+
 function handleSearchInput() {
     currentSearchQuery = noteSearchInput.value;
     filterAndRenderNotes();
@@ -239,7 +261,7 @@ export function initNotes(currentUser) {
         notesCollection = firebase.firestore().collection('users').doc(user.uid).collection('notes');
         fetchNotes();
     } else {
-        if (unsubscribeNotes) unsubscribeNotes(); // Unsubscribe on logout
+        if (unsubscribeNotes) unsubscribeNotes();
         allNotes = [];
         renderNotes([]);
     }
@@ -252,13 +274,12 @@ export function initNotes(currentUser) {
         });
         addNoteForm.addEventListener('submit', handleSaveNote);
 
-        notesList.addEventListener('click', handleNoteClick); // Consolidated click handler
+        notesList.addEventListener('click', handleNoteClick);
         
         notesFilterBar.addEventListener('click', handleFilterClick);
         noteTagsContainer.addEventListener('click', handleTagSelectionUI);
         noteSearchInput.addEventListener('input', handleSearchInput);
 
-        // --- Added: Listeners for the new delete modal ---
         confirmDeleteNoteBtn.addEventListener('click', executeDeleteNote);
         cancelDeleteNoteBtn.addEventListener('click', closeDeleteConfirmModal);
         deleteNoteModal.addEventListener('click', (e) => {
