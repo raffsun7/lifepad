@@ -265,3 +265,30 @@ input, textarea, select {
 #install-pwa-popup.show {
   transform: translateY(0);
 }
+
+/* --- Custom Style for User Name in Mood Greeting --- */
+
+
+.mood-user-name {
+background: linear-gradient(90deg, #00dbde, #fc00ff, #7b2ff7);
+-webkit-background-clip: text;
+-webkit-text-fill-color: transparent;
+font-weight: 700;
+}
+
+/* A slightly different gradient for dark mode for better visibility */
+.dark .mood-user-name {
+  background: linear-gradient(90deg, #4285F4, #9B72CB, #EA4335);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 700;
+}
+
+.mood-ai-name{
+    font-weight: 700;
+    background: linear-gradient(to right, #ff0055, #ff8c00);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-fill-color: transparent;
+}

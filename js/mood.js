@@ -1,34 +1,21 @@
-// js/mood.js
-
-// --- DOM Elements ---
-const aiMoodForm = document.getElementById('ai-mood-form');
-const moodInput = document.getElementById('mood-input');
-const aiResponseArea = document.getElementById('ai-response-area');
-const aiLoadingSpinner = document.getElementById('ai-loading-spinner');
-const aiResponseContent = document.getElementById('ai-response-content');
-const pastChatsList = document.getElementById('past-chats-list');
-const clearHistoryBtn = document.getElementById('clear-history-btn');
-
-// Modal Selectors
-const historyDetailModal = document.getElementById('history-detail-modal');
-const closeHistoryModalBtn = document.getElementById('close-history-modal-btn');
-const historyModalDate = document.getElementById('history-modal-date');
-const historyModalUserQuery = document.getElementById('history-modal-user-query');
-const historyModalAiResponse = document.getElementById('history-modal-ai-response');
+// js/mood.js --- FINAL UNIFIED VERSION
 
 // --- State & Firestore ---
 let user = null;
 let moodHistoryCollection;
+let unsubscribeMoodHistory = null; // ADDED: For performance and stability
 
 // --- Modal Control ---
 function openHistoryModal(item) {
+    const historyDetailModal = document.getElementById('history-detail-modal');
+    const historyModalDate = document.getElementById('history-modal-date');
+    const historyModalUserQuery = document.getElementById('history-modal-user-query');
+    const historyModalAiResponse = document.getElementById('history-modal-ai-response');
+
     historyModalDate.textContent = item.createdAt
         ? new Date(item.createdAt.seconds * 1000).toLocaleString(undefined, {
-              month: 'long',
-              day: 'numeric',
-              year: 'numeric',
-              hour: 'numeric',
-              minute: '2-digit',
+              month: 'long', day: 'numeric', year: 'numeric',
+              hour: 'numeric', minute: '2-digit',
           })
         : '';
     historyModalUserQuery.textContent = `"${item.userQuery}"`;
@@ -37,23 +24,27 @@ function openHistoryModal(item) {
 }
 
 function closeHistoryModal() {
-    historyDetailModal.classList.add('hidden');
+    document.getElementById('history-detail-modal').classList.add('hidden');
 }
 
 // --- AI Interaction via /api/mood ---
 async function handleGetAIResponse(e) {
     e.preventDefault();
+    const moodInput = document.getElementById('mood-input');
     const userInput = moodInput.value.trim();
 
     if (!userInput) {
         alert('Please write something to share how you are feeling.');
         return;
     }
-     if (!user) {
+    if (!user) {
         alert('Please log in to talk with Sarah.');
         return;
     }
 
+    const aiResponseArea = document.getElementById('ai-response-area');
+    const aiResponseContent = document.getElementById('ai-response-content');
+    const aiLoadingSpinner = document.getElementById('ai-loading-spinner');
 
     aiResponseArea.classList.remove('hidden');
     aiResponseContent.classList.add('hidden');
@@ -99,6 +90,7 @@ async function saveConversation(userInput, aiResponse) {
 }
 
 function renderHistory(historyItems) {
+    const pastChatsList = document.getElementById('past-chats-list');
     const loader = document.getElementById('mood-history-loader');
     if (loader) {
         loader.style.display = 'none';
@@ -119,9 +111,9 @@ function renderHistory(historyItems) {
         clickableArea.dataset.historyItem = JSON.stringify(item);
         
         const query = item.userQuery;
-        const truncatedQuery = query.length > 35 ? query.substring(0, 35) + '.....' : query;
+        const truncatedQuery = query.length > 35 ? query.substring(0, 35) + '...' : query;
         
-        clickableArea.innerHTML = `<p class="font-medium text-slate-700 dark:text-slate-300 text-sm whitespace-nowrap overflow-hidden text-ellipsis">${truncatedQuery}</p>`;
+        clickableArea.innerHTML = `<p class="font-medium text-slate-700 dark:text-slate-300 text-sm whitespace-nowrap overflow-hidden text-ellipsis pointer-events-none">${truncatedQuery}</p>`;
 
         const deleteBtn = document.createElement('button');
         deleteBtn.className = 'delete-history-btn flex-shrink-0 p-1 text-red-500 hover:text-red-700 rounded-full';
@@ -136,16 +128,13 @@ function renderHistory(historyItems) {
 
 function fetchHistory() {
     if (!moodHistoryCollection) return;
-    moodHistoryCollection.orderBy('createdAt', 'desc').limit(20).onSnapshot((snapshot) => {
+    // ADDED: Unsubscribe from old listener to prevent memory leaks
+    if (unsubscribeMoodHistory) unsubscribeMoodHistory();
+
+    unsubscribeMoodHistory = moodHistoryCollection.orderBy('createdAt', 'desc').limit(20).onSnapshot((snapshot) => {
         const history = snapshot.docs.map((doc) => ({
             id: doc.id,
             ...doc.data(),
-            createdAt: doc.data().createdAt
-                ? {
-                      seconds: doc.data().createdAt.seconds,
-                      nanoseconds: doc.data().createdAt.nanoseconds,
-                  }
-                : null,
         }));
         renderHistory(history);
     });
@@ -161,12 +150,6 @@ function handleHistoryClick(e) {
         }
     } else if (openBtn) {
         const itemData = JSON.parse(openBtn.dataset.historyItem);
-        if (itemData.createdAt) {
-            itemData.createdAt = new firebase.firestore.Timestamp(
-                itemData.createdAt.seconds,
-                itemData.createdAt.nanoseconds
-            );
-        }
         openHistoryModal(itemData);
     }
 }
@@ -174,8 +157,10 @@ function handleHistoryClick(e) {
 async function handleClearAllHistory() {
     if (!user || !moodHistoryCollection) return;
     if (!confirm('Are you sure you want to delete ALL of your conversations? This cannot be undone.')) return;
+    
     const snapshot = await moodHistoryCollection.get();
     if (snapshot.empty) return;
+
     const batch = firebase.firestore().batch();
     snapshot.docs.forEach((doc) => batch.delete(doc.ref));
     await batch.commit();
@@ -184,17 +169,42 @@ async function handleClearAllHistory() {
 // --- Initialization ---
 export function initMood(currentUser) {
     user = currentUser;
+
+    // --- ADDED: Personalized Greeting Logic ---
+    const mainHeading = document.getElementById('mood-main-heading');
+    const subHeading = document.getElementById('mood-sub-heading');
+    const aiMoodForm = document.getElementById('ai-mood-form');
+    const moodInput = document.getElementById('mood-input');
+
+    if (user && mainHeading && subHeading) {
+        const userName = user.displayName || 'friend';
+        mainHeading.innerHTML = `Hey <span class="mood-user-name">${userName}</span>`;
+        subHeading.innerHTML = `Your friend <span class="mood-ai-name">Sarah</span> is here. What's on your mind?`;
+        moodInput.disabled = false;
+        aiMoodForm.querySelector('button').disabled = false;
+    } else if (mainHeading && subHeading) {
+        mainHeading.textContent = "Your Friend (Sarah)";
+        subHeading.textContent = "Log in to chat with your friend.";
+        moodInput.disabled = true;
+        aiMoodForm.querySelector('button').disabled = true;
+    }
+    // --- END OF GREETING LOGIC ---
+
+
     if (user) {
-        moodHistoryCollection = firebase.firestore()
-            .collection('users')
-            .doc(user.uid)
-            .collection('moodHistory');
+        moodHistoryCollection = firebase.firestore().collection('users').doc(user.uid).collection('moodHistory');
         fetchHistory();
     } else {
+        if (unsubscribeMoodHistory) unsubscribeMoodHistory();
         renderHistory([]);
     }
 
-    if (!aiMoodForm.dataset.initialized) {
+    if (aiMoodForm && !aiMoodForm.dataset.initialized) {
+        const pastChatsList = document.getElementById('past-chats-list');
+        const clearHistoryBtn = document.getElementById('clear-history-btn');
+        const historyDetailModal = document.getElementById('history-detail-modal');
+        const closeHistoryModalBtn = document.getElementById('close-history-modal-btn');
+
         aiMoodForm.addEventListener('submit', handleGetAIResponse);
         closeHistoryModalBtn.addEventListener('click', closeHistoryModal);
         historyDetailModal.addEventListener('click', (e) => {

@@ -80,10 +80,10 @@
         <main class="flex-grow container mx-auto px-4">
 
             <section id="mood" class="app-section bg-white/60 dark:bg-dark-card/60 backdrop-blur-xl rounded-2xl shadow-xl border border-white/20 dark:border-dark-border p-0 hidden flex flex-col" style="height: 90vh;">
-                <div class="flex-shrink-0 p-4 border-b border-slate-300/70 dark:border-dark-border/70"><h2 class="text-2xl font-bold text-center">Your Friend (Sarah)</h2></div>
+                <div class="flex-shrink-0 p-4 border-b border-slate-300/70 dark:border-dark-border/70"><h2 id="mood-main-heading" class="text-2xl font-bold text-center">Your Friend (Sarah)</h2></div>
                 <div class="flex-grow basis-0 p-4 overflow-y-auto">
                     <form id="ai-mood-form" class="max-w-2xl mx-auto">
-                        <p class="text-gray-500 dark:text-gray-400 mb-4 text-center">How are you truly feeling right now?</p>
+                        <p id="mood-sub-heading" class="text-gray-500 dark:text-gray-400 mb-4 text-center">How are you truly feeling right now?</p>
                         <textarea id="mood-input" rows="3" class="w-full p-3 border rounded-lg bg-white/50 dark:bg-black/20 border-gray-300 dark:border-dark-border focus:ring-2 focus:ring-sky-400 focus:outline-none" placeholder="e.g., I'm feeling a bit anxious about my exams..."></textarea>
                         <button type="submit" class="w-full mt-4 bg-sky-500 hover:bg-sky-600 text-white font-bold py-3 px-6 rounded-lg transition-all duration-200 hover:scale-105 shadow-md">Tell Me</button>
                     </form>
@@ -104,7 +104,7 @@
             </section>
             
             <section id="planner" class="glass-pane app-section bg-white/60 dark:bg-dark-card/60 backdrop-blur-xl rounded-2xl shadow-xl border border-white/20 dark:border-dark-border p-8">
-                <h2 class="text-3xl font-bold mb-6 text-center">Daily Planner</h2>
+                <h2 class="text-3xl font-bold mb-6 text-center">To Do List</h2>
                 <form id="add-task-form" class="flex flex-col sm:flex-row gap-3 mb-6">
                     <input type="text" id="task-input" placeholder="e.g., Workout for 15 minutes" class="flex-grow p-3 border rounded-lg bg-white/50 dark:bg-black/20 border-gray-300 dark:border-dark-border focus:ring-2 focus:ring-sky-400 focus:outline-none">
                     <select id="task-priority-input" class="p-3 border rounded-lg bg-white/50 dark:bg-black/20 border-gray-300 dark:border-dark-border focus:ring-2 focus:ring-sky-400 focus:outline-none">
