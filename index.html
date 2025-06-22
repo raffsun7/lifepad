@@ -30,6 +30,8 @@
         }
       }
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
+
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -360,6 +362,27 @@
             <div class="flex items-center">
                 <button id="dismiss-pwa-btn" class="font-semibold text-gray-500 dark:text-gray-400 p-3 hover:bg-black/5 dark:hover:bg-white/5 rounded-full mr-2">Later</button>
                 <button id="install-pwa-btn" class="bg-sky-500 hover:bg-sky-600 text-white font-bold py-2 px-5 rounded-lg shadow-md">Install</button>
+            </div>
+        </div>
+    </div>
+    <div id="delete-note-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm hidden">
+        <div class="glass-pane w-full max-w-md bg-white/60 dark:bg-dark-card/60 backdrop-blur-xl rounded-2xl shadow-xl border border-white/20 dark:border-dark-border p-6 relative text-center">
+            <h3 class="text-xl font-bold mb-4">Delete Note</h3>
+            <p class="text-gray-600 dark:text-gray-300 mb-6">Are you sure you want to permanently delete this note?</p>
+            <div class="flex justify-center space-x-4">
+                <button id="cancel-delete-note-btn" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-6 rounded-lg">Cancel</button>
+                <button id="confirm-delete-note-btn" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-6 rounded-lg">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="delete-challenge-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm hidden">
+        <div class="glass-pane w-full max-w-md bg-white/60 dark:bg-dark-card/60 backdrop-blur-xl rounded-2xl shadow-xl border border-white/20 dark:border-dark-border p-6 relative text-center">
+            <h3 class="text-xl font-bold mb-4">Delete Challenge</h3>
+            <p class="text-gray-600 dark:text-gray-300 mb-6">Are you sure? Deleting a challenge is permanent and cannot be undone.</p>
+            <div class="flex justify-center space-x-4">
+                <button id="cancel-delete-challenge-btn" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-6 rounded-lg">Cancel</button>
+                <button id="confirm-delete-challenge-btn" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-6 rounded-lg">Delete</button>
             </div>
         </div>
     </div>
