@@ -1,52 +1,49 @@
-// js/challenge.js
-
-// --- DOM Elements ---
-const addChallengeBtn = document.getElementById('add-challenge-btn');
-const addChallengeModal = document.getElementById('add-challenge-modal');
-const closeChallengeModalBtn = document.getElementById('close-challenge-modal-btn');
-const addChallengeForm = document.getElementById('add-challenge-form');
-const challengeGoalInput = document.getElementById('challenge-goal-input');
-const challengeDaysInput = document.getElementById('challenge-days-input');
-const challengeList = document.getElementById('challenge-list');
-
-// --- Added: Delete Confirmation Modal Elements ---
-const deleteChallengeModal = document.getElementById('delete-challenge-modal');
-const confirmDeleteChallengeBtn = document.getElementById('confirm-delete-challenge-btn');
-const cancelDeleteChallengeBtn = document.getElementById('cancel-delete-challenge-btn');
-
+// js/challenge.js --- FINAL VERSION with Delete Modal
 
 // --- State & Firestore ---
 let user = null;
 let challengesCollection;
 let allChallenges = [];
-let unsubscribeChallenges = null; // --- Added: To manage Firestore listener
-let challengeToDeleteId = null; // --- Added: To hold the ID of the challenge being deleted
+let unsubscribeChallenges = null;
+let challengeToDeleteId = null;
+
+// --- Helper function for notifications ---
+function showNotification(title, body) {
+  if (Notification.permission !== 'granted' || !('serviceWorker' in navigator) || !navigator.serviceWorker.controller) {
+    return;
+  }
+  navigator.serviceWorker.controller.postMessage({
+    type: 'SHOW_NOTIFICATION',
+    title: title,
+    body: body
+  });
+}
 
 // --- Modal Control ---
 function openChallengeModal() {
-    addChallengeModal.classList.remove('hidden');
+    document.getElementById('add-challenge-modal').classList.remove('hidden');
 }
 
 function closeChallengeModal() {
-    addChallengeModal.classList.add('hidden');
-    addChallengeForm.reset();
-    challengeDaysInput.value = 22;
+    document.getElementById('add-challenge-modal').classList.add('hidden');
+    document.getElementById('add-challenge-form').reset();
+    document.getElementById('challenge-days-input').value = 22;
 }
 
-// --- Added: Delete Confirmation Modal Control ---
 function openDeleteConfirmModal(challengeId) {
     challengeToDeleteId = challengeId;
-    deleteChallengeModal.classList.remove('hidden');
+    document.getElementById('delete-challenge-modal').classList.remove('hidden');
 }
 
 function closeDeleteConfirmModal() {
     challengeToDeleteId = null;
-    deleteChallengeModal.classList.add('hidden');
+    document.getElementById('delete-challenge-modal').classList.add('hidden');
 }
 
 
 // --- Core Functions ---
 function renderChallenges() {
+    const challengeList = document.getElementById('challenge-list');
     const loader = document.getElementById('challenge-loader');
     if (loader) {
         loader.style.display = 'none';
@@ -63,7 +60,6 @@ function renderChallenges() {
     }
 
     allChallenges.forEach(challenge => {
-        // ... (rest of the rendering logic remains the same)
         const completedDays = Object.values(challenge.days).filter(Boolean).length;
         const totalDays = challenge.totalDays;
         const progress = Math.round((completedDays / totalDays) * 100);
@@ -86,12 +82,11 @@ function renderChallenges() {
                     </div>
                 </div>
                 <div class="w-full bg-gray-200 rounded-full dark:bg-gray-700 mt-3">
-                    <div class="bg-green-500 text-xs font-medium text-blue-100 text-center p-0.5 leading-none rounded-full" style="width: ${progress}%">${progress}%</div>
+                    <div class="bg-green-500 text-xs font-medium text-blue-100 text-center p-0.5 leading-none rounded-full" style="width: ${progress}%">${progress > 0 ? progress : ''}${progress > 0 ? '%' : ''}</div>
                 </div>
             </div>
             <div class="challenge-content hidden p-4 border-t border-gray-200 dark:border-slate-700">
-                <div class="challenge-days-grid grid grid-cols-4 sm:grid-cols-7 gap-3">
-                    </div>
+                <div class="challenge-days-grid grid grid-cols-4 sm:grid-cols-7 gap-3"></div>
             </div>
         `;
         
@@ -109,10 +104,7 @@ function renderChallenges() {
 
             const dayEl = document.createElement('label');
             dayEl.className = `flex items-center space-x-2 p-2 rounded-lg ${isDisabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700'}`;
-            dayEl.innerHTML = `
-                <input type="checkbox" data-day="${dayKey}" class="form-checkbox h-5 w-5 rounded text-sky-600" ${isChecked ? 'checked' : ''} ${isDisabled ? 'disabled' : ''}>
-                <span class="text-gray-700 dark:text-gray-300">Day ${i}</span>
-            `;
+            dayEl.innerHTML = `<input type="checkbox" data-day="${dayKey}" class="form-checkbox h-5 w-5 rounded text-sky-600" ${isChecked ? 'checked' : ''} ${isDisabled ? 'disabled' : ''}> <span class="text-gray-700 dark:text-gray-300">Day ${i}</span>`;
             daysGrid.appendChild(dayEl);
         }
         challengeList.appendChild(challengeEl);
@@ -120,8 +112,9 @@ function renderChallenges() {
 }
 
 async function handleAddChallenge(e) {
-    // ... (this function remains the same)
     e.preventDefault();
+    const challengeGoalInput = document.getElementById('challenge-goal-input');
+    const challengeDaysInput = document.getElementById('challenge-days-input');
     const goal = challengeGoalInput.value.trim();
     const totalDays = parseInt(challengeDaysInput.value, 10);
 
@@ -141,14 +134,6 @@ async function handleAddChallenge(e) {
     }
 }
 
-// --- Updated: No longer uses confirm(), opens modal instead ---
-async function handleDeleteChallenge(challengeId) {
-    if (user) {
-        openDeleteConfirmModal(challengeId);
-    }
-}
-
-// --- Added: New function to execute delete after confirmation ---
 async function executeDeleteChallenge() {
     if (!challengeToDeleteId || !user) return;
     try {
@@ -162,18 +147,30 @@ async function executeDeleteChallenge() {
     }
 }
 
-// --- Updated: Added haptic feedback ---
 async function handleDayCheckboxChange(e, challengeId) {
     if (e.target.type === 'checkbox' && user) {
         const dayKey = e.target.dataset.day;
         const isChecked = e.target.checked;
+
+        if (isChecked && Notification.permission === 'default') {
+            try { await Notification.requestPermission(); }
+            catch(err) { console.warn("Notification permission denied."); }
+        }
+
         try {
             const challengeRef = challengesCollection.doc(challengeId);
             await challengeRef.update({ [`days.${dayKey}`]: isChecked });
-            if ('vibrate' in navigator) navigator.vibrate(50); // Haptic feedback on check
+            if ('vibrate' in navigator) navigator.vibrate(50);
+
+            if (isChecked) {
+                const challenge = allChallenges.find(c => c.id === challengeId);
+                if (challenge) {
+                    showNotification('Challenge Progress!', `Great job! You've completed another day of "${challenge.goal}". Keep it up!`);
+                }
+            }
         } catch (error) {
             console.error("Error updating challenge day: ", error);
-            e.target.checked = !isChecked; // Revert checkbox on error
+            e.target.checked = !isChecked;
             alert("Could not update progress. Please check your connection.");
         }
     }
@@ -187,7 +184,7 @@ function handleChallengeClick(e) {
 
     if (e.target.closest('.delete-challenge-btn')) {
         e.stopPropagation();
-        handleDeleteChallenge(challengeId); // This now opens the modal
+        openDeleteConfirmModal(challengeId);
         return;
     }
     
@@ -204,10 +201,8 @@ function handleChallengeClick(e) {
     }
 }
 
-// --- Updated: Now manages the listener subscription ---
 function fetchChallenges() {
     if (!challengesCollection) return;
-
     if (unsubscribeChallenges) unsubscribeChallenges();
 
     unsubscribeChallenges = challengesCollection.orderBy("startDate", "desc").onSnapshot(snapshot => {
@@ -215,7 +210,7 @@ function fetchChallenges() {
         renderChallenges();
     }, error => {
         console.error("Error fetching challenges: ", error);
-        challengeList.innerHTML = `<p class="text-center text-red-500">Could not load challenges.</p>`;
+        document.getElementById('challenge-list').innerHTML = `<p class="text-center text-red-500">Could not load challenges.</p>`;
     });
 }
 
@@ -226,28 +221,38 @@ export function initChallenge(currentUser) {
         challengesCollection = firebase.firestore().collection('users').doc(user.uid).collection('challenges');
         fetchChallenges();
     } else {
-        if (unsubscribeChallenges) unsubscribeChallenges(); // Unsubscribe on logout
+        if (unsubscribeChallenges) unsubscribeChallenges();
         allChallenges = [];
         renderChallenges();
     }
 
-    if (!addChallengeForm.dataset.initialized) {
-        addChallengeBtn.addEventListener('click', openChallengeModal);
-        closeChallengeModalBtn.addEventListener('click', closeChallengeModal);
-        addChallengeModal.addEventListener('click', (e) => {
-            if (e.target === addChallengeModal) closeChallengeModal();
-        });
-        
-        addChallengeForm.addEventListener('submit', handleAddChallenge);
-        challengeList.addEventListener('click', handleChallengeClick);
-
-        // --- Added: Listeners for the new delete modal ---
-        confirmDeleteChallengeBtn.addEventListener('click', executeDeleteChallenge);
-        cancelDeleteChallengeBtn.addEventListener('click', closeDeleteConfirmModal);
-        deleteChallengeModal.addEventListener('click', (e) => {
-            if (e.target === deleteChallengeModal) closeDeleteConfirmModal();
-        });
-        
-        addChallengeForm.dataset.initialized = 'true';
+    const addChallengeForm = document.getElementById('add-challenge-form');
+    if (!addChallengeForm || addChallengeForm.dataset.initialized) {
+        return;
     }
+    
+    const addChallengeBtn = document.getElementById('add-challenge-btn');
+    const closeChallengeModalBtn = document.getElementById('close-challenge-modal-btn');
+    const addChallengeModal = document.getElementById('add-challenge-modal');
+    const challengeList = document.getElementById('challenge-list');
+    const confirmDeleteChallengeBtn = document.getElementById('confirm-delete-challenge-btn');
+    const cancelDeleteChallengeBtn = document.getElementById('cancel-delete-challenge-btn');
+    const deleteChallengeModal = document.getElementById('delete-challenge-modal');
+
+    addChallengeBtn.addEventListener('click', openChallengeModal);
+    closeChallengeModalBtn.addEventListener('click', closeChallengeModal);
+    addChallengeModal.addEventListener('click', (e) => {
+        if (e.target === addChallengeModal) closeChallengeModal();
+    });
+    
+    addChallengeForm.addEventListener('submit', handleAddChallenge);
+    challengeList.addEventListener('click', handleChallengeClick);
+
+    confirmDeleteChallengeBtn.addEventListener('click', executeDeleteChallenge);
+    cancelDeleteChallengeBtn.addEventListener('click', closeDeleteConfirmModal);
+    deleteChallengeModal.addEventListener('click', (e) => {
+        if (e.target === deleteChallengeModal) closeDeleteConfirmModal();
+    });
+    
+    addChallengeForm.dataset.initialized = 'true';
 }
