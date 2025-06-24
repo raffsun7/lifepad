@@ -292,3 +292,8 @@ font-weight: 700;
     background-clip: text;
     text-fill-color: transparent;
 }
+
+/* --- Custom Height for Note Editor --- */
+#note-editor .ql-editor {
+    min-height: 250px; /* You can change this value to be taller or shorter */
+}
