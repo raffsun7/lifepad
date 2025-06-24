@@ -1,6 +1,7 @@
-// service-worker.js --- FINAL VERSION WITH OFFLINE SPA SUPPORT
+// service-worker.js --- FINAL ROBUST VERSION FOR OFFLINE
 
-const CACHE_NAME = 'lifepad-cache-v2'; // Updated cache name to ensure new cache is used
+// By changing the version, we ensure the browser installs the new service worker.
+const CACHE_NAME = 'lifepad-cache-v3';
 
 // A complete list of all the essential files that make up the "app shell".
 const URLS_TO_CACHE = [
@@ -41,7 +42,16 @@ self.addEventListener('install', event => {
     caches.open(CACHE_NAME)
       .then(cache => {
         console.log('Service Worker: Caching app shell');
-        return cache.addAll(URLS_TO_CACHE);
+        
+        // Make caching of external resources more robust by not using addAll for them
+        const coreAppShell = URLS_TO_CACHE.filter(url => url.startsWith('/'));
+        const externalResources = URLS_TO_CACHE.filter(url => !url.startsWith('/'));
+        
+        externalResources.forEach(url => {
+            cache.add(url).catch(err => console.warn(`Failed to cache external resource: ${url}`));
+        });
+
+        return cache.addAll(coreAppShell);
       })
       .then(() => self.skipWaiting()) // Force the new service worker to activate
   );
@@ -66,7 +76,6 @@ self.addEventListener('activate', event => {
 
 // --- Fetch Event: Serves app from cache when offline (Robust SPA Version) ---
 self.addEventListener('fetch', event => {
-  // We only want to handle GET requests for our app shell
   if (event.request.method !== 'GET') {
     return;
   }
@@ -82,12 +91,8 @@ self.addEventListener('fetch', event => {
       // 2. If not in cache, try to fetch from the network
       try {
         const networkResponse = await fetch(event.request);
-        // If the fetch is successful, clone it and cache it for next time
         if (networkResponse.ok) {
-            // We only cache requests from our own origin or known CDNs
-            if (URLS_TO_CACHE.includes(event.request.url) || event.request.url.startsWith(self.location.origin)) {
-                 cache.put(event.request, networkResponse.clone());
-            }
+          cache.put(event.request, networkResponse.clone());
         }
         return networkResponse;
       } catch (error) {
@@ -96,7 +101,6 @@ self.addEventListener('fetch', event => {
           // ...serve the main index.html file from the cache.
           return await cache.match('/index.html');
         }
-        // For other failed requests (like APIs), let the error happen.
         return null;
       }
     })
