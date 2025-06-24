@@ -1,8 +1,8 @@
-// service-worker.js --- UPDATED FOR FULL OFFLINE SUPPORT
+// service-worker.js --- FINAL VERSION WITH OFFLINE SPA SUPPORT
 
-const CACHE_NAME = 'lifepad-cache-v1';
+const CACHE_NAME = 'lifepad-cache-v2'; // Updated cache name to ensure new cache is used
 
-// A list of all the essential files that make up the "app shell".
+// A complete list of all the essential files that make up the "app shell".
 const URLS_TO_CACHE = [
   '/',
   '/index.html',
@@ -24,6 +24,7 @@ const URLS_TO_CACHE = [
   'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap',
   'https://cdn.quilljs.com/1.3.6/quill.snow.css',
   'https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js',
+  'https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js',
   'https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js',
   'https://www.gstatic.com/firebasejs/9.15.0/firebase-auth-compat.js',
   'https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore-compat.js',
@@ -42,6 +43,7 @@ self.addEventListener('install', event => {
         console.log('Service Worker: Caching app shell');
         return cache.addAll(URLS_TO_CACHE);
       })
+      .then(() => self.skipWaiting()) // Force the new service worker to activate
   );
 });
 
@@ -58,28 +60,51 @@ self.addEventListener('activate', event => {
           }
         })
       );
+    }).then(() => self.clients.claim()) // Take control of all open clients
+  );
+});
+
+// --- Fetch Event: Serves app from cache when offline (Robust SPA Version) ---
+self.addEventListener('fetch', event => {
+  // We only want to handle GET requests for our app shell
+  if (event.request.method !== 'GET') {
+    return;
+  }
+
+  event.respondWith(
+    caches.open(CACHE_NAME).then(async (cache) => {
+      // 1. Try to get the response from the cache
+      const cachedResponse = await cache.match(event.request);
+      if (cachedResponse) {
+        return cachedResponse;
+      }
+
+      // 2. If not in cache, try to fetch from the network
+      try {
+        const networkResponse = await fetch(event.request);
+        // If the fetch is successful, clone it and cache it for next time
+        if (networkResponse.ok) {
+            // We only cache requests from our own origin or known CDNs
+            if (URLS_TO_CACHE.includes(event.request.url) || event.request.url.startsWith(self.location.origin)) {
+                 cache.put(event.request, networkResponse.clone());
+            }
+        }
+        return networkResponse;
+      } catch (error) {
+        // 3. If the network fails (offline) and it's a page navigation...
+        if (event.request.mode === 'navigate') {
+          // ...serve the main index.html file from the cache.
+          return await cache.match('/index.html');
+        }
+        // For other failed requests (like APIs), let the error happen.
+        return null;
+      }
     })
   );
 });
 
-// --- Fetch Event: Serves app from cache when offline ---
-self.addEventListener('fetch', event => {
-  event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        // If the request is in the cache, return it.
-        if (response) {
-          return response;
-        }
-        // Otherwise, try to fetch it from the network.
-        return fetch(event.request);
-      }
-    )
-  );
-});
 
-
-// --- Notification Logic (remains the same) ---
+// --- Notification Logic ---
 self.addEventListener('message', event => {
   if (event.data && event.data.type === 'SHOW_NOTIFICATION') {
     const { title, body } = event.data;
